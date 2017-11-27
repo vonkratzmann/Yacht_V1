@@ -66,12 +66,12 @@
 #define DEBUGISR1 0
 #define DEBUGISR2 0
 
-volatile unsigned int interrupt_Counter = 0;     //used in main loop to show the ISR is running
-const unsigned int one_Sec = 2000;               //used in main loop to show the ISR is running, flashes led off and on each second
+unsigned int interrupt_Counter = 0;         //used in main loop to show the ISR is running
+const unsigned int one_Sec = 2000;          //used in main loop to show the ISR is running, flashes led off and on each second
 
-unsigned long  joys_Time_Of_Last_Scan = 0;      //track when we last scanned for joystick changes
+unsigned long  joys_Time_Of_Last_Scan = 0;     //track when we last scanned for joystick changes
 
-const long Debounce = 50;                       //debounce time for switch in millisecs
+const long Debounce = 100;                    //debounce time for switch in millisecs
 
 /* Rudder Parameters */
 
@@ -82,7 +82,6 @@ const long Debounce = 50;                       //debounce time for switch in mi
 /** motors
 
    define i/o for each motor driver board, each board has 2 inputs: direction & pwm
-
 */
 const uint8_t  rudder_Dir_Pin     = 8;      //sets direction rudder motor turns
 const uint8_t  rudder_Pwm_Pin     = 9;      //PWM pulse to set the speed of the rudder motor
@@ -92,13 +91,12 @@ const uint8_t  boom_Pwm_Pin   = 6;          //PWM pulse to set the speed of the 
 /** end of travel detectors
 
    define i/O for reed switches to detect end of travel for the chain on each motor
-
 */
 const uint8_t  rudder_Port_EndofTravel_Pin      = 2;
 const uint8_t  rudder_Starboard_EndofTravel_Pin = 3;
 const uint8_t  boom_Tight_EndofTravel_Pin       = 4;
 const uint8_t  boom_Loose_EndofTravel_Pin       = 5;
-
+/* define i/O for led */
 const uint8_t ledPin =  13; //LED connected to digital pin 13
 uint8_t led = LOW;  //initial state of led
 
@@ -106,6 +104,17 @@ uint8_t led = LOW;  //initial state of led
 unsigned long entry_Time, exit_Time;        //used to check overhead of ISR
 unsigned long tmp1, tmp2;
 #endif
+
+/* define objects */
+
+/* define motors */
+JoyStick js;  //define joystick
+
+/* define reed switches */
+Switch switch_rudder_Port_EndofTravel(rudder_Port_EndofTravel_Pin, Debounce);
+Switch switch_rudder_Starboard_EndofTravel(rudder_Starboard_EndofTravel_Pin, Debounce);
+Switch switch_boom_Tight_EndofTravel(boom_Tight_EndofTravel_Pin, Debounce);
+Switch switch_boom_Loose_EndofTravel(boom_Loose_EndofTravel_Pin, Debounce);
 
 
 /* Interrupt Service Routine for timer 2
@@ -133,17 +142,6 @@ ISR(TIMER2_COMPA_vect)
   return;
 }  //end of ISR
 
-
-/* define objects */
-
-/* define motors */
-JoyStick js;  //define joystick
-
-/* define reed switches */
-Switch switch_rudder_Port_EndofTravel(rudder_Port_EndofTravel_Pin, Debounce) ;
-Switch switch_rudder_Starboard_EndofTravel(rudder_Starboard_EndofTravel_Pin, Debounce);
-Switch switch_boom_Tight_EndofTravel(boom_Tight_EndofTravel_Pin, Debounce);
-Switch switch_boom_Loose_EndofTravel(boom_Loose_EndofTravel_Pin, Debounce);
 
 /** Setup
 
@@ -203,7 +201,7 @@ void loop(void)
   if ((millis() - joys_Time_Of_Last_Scan) > JoyStick_Scan_Rate) //check if time to scan joystick for changes to x and Y axis
   {
     joys_Time_Of_Last_Scan = millis();    //yes, reset timer
-    boolean flag;                         //flag to indicate joystick position has changed
+    bool flag;                         //flag to indicate joystick position has changed
     flag = js.check_Y_Pos();              //must run both functions to ensure current x & y positions are updated
     flag |= js.check_X_Pos();
     if (flag)                             //check if x or y axis changed,
@@ -212,20 +210,20 @@ void loop(void)
     }
   }
 
-  if (switch_rudder_Port_EndofTravel.switch_Changed)
+  if (switch_rudder_Port_EndofTravel.switch_Changed())
   {
     //yes, do something
   }
 
-  if (switch_rudder_Starboard_EndofTravel.switch_Changed)
+  if (switch_rudder_Starboard_EndofTravel.switch_Changed())
   {
     //yes, do something
   }
-  if (switch_boom_Tight_EndofTravel.switch_Changed)
+  if (switch_boom_Tight_EndofTravel.switch_Changed())
   {
     //yes, do something
   }
-  if (switch_boom_Loose_EndofTravel.switch_Changed)
+  if (switch_boom_Loose_EndofTravel.switch_Changed())
   {
     //yes, do something
   }
