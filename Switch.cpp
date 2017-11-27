@@ -5,7 +5,7 @@
    If set to 1 and switch state changes prints out the switch state
    Normally set to zero
 */
-#define DEBUGSW 0
+#define DEBUGSW 1
 /* Switch::Switch()
   Constructor
   sets up I/O pin for switch
@@ -16,27 +16,34 @@ Switch::Switch(uint8_t par_pin, unsigned long par_debounce)	//set up so can init
 {
   pin = par_pin;						      //pin switch is connected too
   pinMode(pin, INPUT_PULLUP);			//enable internal pullups
-  debounce_Time		= par_debounce;	//Set up debounce period
-  switch_State		  = false;		  //the current state of the switch
+  debounce_Time		  = par_debounce;	//Set up debounce period
+  switch_State		  = false;		  //the initial state of the switch
   last_Switch_State	= false;
-  last_Debounce_Time	= 0;
+  previous_debounced_state = false;
+  last_Time_Changed	= millis();   //record time switched state changed
 }
 
 /* Switch::switch_Changed()
    check if switch state has changed
    only returns a change if the switch has been debounced
+   for the debouncing to work this routine has to be called regularly by the main loop
 */
 bool Switch::switch_Changed(void)
 {
-  switch_State = !digitalRead(pin);					//invert so when switch pressed returns true
-  if ((switch_State != last_Switch_State) && (millis() - last_Debounce_Time > debounce_Time))	//changed for longer then debounce period?
+  switch_State = !digitalRead(pin);				  //invert so when switch pressed returns true
+  if (switch_State != last_Switch_State)    //if does not equal last state
   {
-    last_Switch_State = switch_State;	      //yes, pass the new state back to the calling function
+    last_Time_Changed = millis();           //record time of change
+    last_Switch_State = switch_State;       //yes, update state
+  }
+  if ((switch_State != previous_debounced_state) && ((millis() - last_Time_Changed) > debounce_Time))	//changed for longer then debounce period?
+  {
+    previous_debounced_state = switch_State;	      //yes, update state
 #ifdef DEBUGSW
     Serial.print("Switch change, state: ");
     Serial.println(switch_State);
 #endif
-    last_Debounce_Time = millis();			//reset timer, ready for the next change in switch postion
+    last_Time_Changed = millis();			  //reset timer, ready for the next change in switch postion
     return true;							          //tell them there was a change in the switch
   }
   else
@@ -46,7 +53,7 @@ bool Switch::switch_Changed(void)
 }
 
 /* Switch::get_Switch_State()
-   return current state of switch, true closed, false open
+   return current debounced state of switch, true closed, false open
 */
 
 bool Switch::get_Switch_State(void)

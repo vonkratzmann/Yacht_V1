@@ -53,7 +53,7 @@
 #define DEBUGISR2 0
 
 unsigned int interrupt_Counter = 0;         //used in main loop to show the ISR is running
-const unsigned int one_Sec = 2000;          //used in main loop to show the ISR is running, flashes led off and on each second
+const unsigned int one_Sec = 1000;          //used in main loop to show the ISR is running, flashes led off and on each second
 
 unsigned long  joys_Time_Of_Last_Scan = 0;     //track when we last scanned for joystick changes
 unsigned long  motor_Time_Of_Last_Scan = 0;    //track when we last updated motor speeds
@@ -91,10 +91,10 @@ unsigned long tmp1, tmp2;
 JoyStick js;  //define joystick
 
 /* define reed switches */
-Switch switch_rudder_Port_EndofTravel(rudder_Port_EndofTravel_Pin, Debounce);
-Switch switch_rudder_Starboard_EndofTravel(rudder_Starboard_EndofTravel_Pin, Debounce);
-Switch switch_boom_Tight_EndofTravel(boom_Tight_EndofTravel_Pin, Debounce);
-Switch switch_boom_Loose_EndofTravel(boom_Loose_EndofTravel_Pin, Debounce);
+Switch switch_rudder_Port(rudder_Port_EndofTravel_Pin, Debounce);
+Switch switch_rudder_Starboard(rudder_Starboard_EndofTravel_Pin, Debounce);
+Switch switch_boom_Tight(boom_Tight_EndofTravel_Pin, Debounce);
+Switch switch_boom_Loose(boom_Loose_EndofTravel_Pin, Debounce);
 
 /* define motors */
 Motor rudder_motor(rudder_Pwm_Pin, rudder_Dir_Pin);
@@ -210,16 +210,16 @@ void loop(void)
   }
 
   /* check for any changes to end of travel reed switches */
-  if (switch_rudder_Port_EndofTravel.switch_Changed())      //check if switch has changed state
+  if (switch_rudder_Port.switch_Changed())      //check if switch has changed state
   {
     //yes, get new switch state
-    if (switch_rudder_Port_EndofTravel.get_Switch_State())  //if switch now closed
+    if (switch_rudder_Port.get_Switch_State())  //if switch now closed
     {
-      if (boom_motor.get_requested_speed != 0)              //check if moving. If already stopped, ignore switch change
+      if (boom_motor.get_Requested_Speed() != 0)              //check if moving. If already stopped, ignore switch change
       {
-        if (boom_motor.get_requested_dir == REVERSE)        //moving, so check if moving to starboard
+        if (boom_motor.get_Requested_Dir() == REVERSE)        //moving, so check if moving to starboard
         {
-          boom_motor.set_requested_speed = 0;               //yes, stop motor. If moving to port, ignore switch change
+          boom_motor.set_Requested_Speed(0);               //yes, stop motor. If moving to port, ignore switch change
         }
       }
     }
@@ -229,20 +229,18 @@ void loop(void)
 
   }
 
-}
-
-if (switch_rudder_Starboard_EndofTravel.switch_Changed())
-{
-  //yes, do something
-}
-if (switch_boom_Tight_EndofTravel.switch_Changed())
-{
-  //yes, do something
-}
-if (switch_boom_Loose_EndofTravel.switch_Changed())
-{
-  //yes, do something
-}
+  if (switch_rudder_Starboard.switch_Changed())
+  {
+    //yes, do something
+  }
+  if (switch_boom_Tight.switch_Changed())
+  {
+    //yes, do something
+  }
+  if (switch_boom_Loose.switch_Changed())
+  {
+    //yes, do something
+  }
 }
 //end of loop()
 

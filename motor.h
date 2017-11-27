@@ -8,8 +8,8 @@
 
 #include "Arduino.h"
 
-#define FORWARD 0;
-#define BACKWARD 1;
+#define FORWARD 0
+#define REVERSE 1
 
 /* Motor Parameters
    Combination of scan rate and maximum Rate of Change (ROC) limit speed of response of system
