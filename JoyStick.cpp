@@ -51,7 +51,6 @@ bool JoyStick::check_X_Pos (void)               //check joystick for any changes
   }
   return x_Chnged;
 }
-//end of JoyStick::chk_X_Pos()
 
 /* JoyStick check y position
    reads joystick, compares current and new
@@ -73,7 +72,6 @@ bool JoyStick::check_Y_Pos (void)               //check joystick for any changes
     Serial.println(y_Cur);
     Serial.print("jsynew: ");
     Serial.println(y_New);
-
 #endif
     diff = y_New - y_Cur;
     if (abs(diff) > JoyStick_Max_ROC)       //check if difference greater then max rate of change (ROC)

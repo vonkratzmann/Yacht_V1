@@ -7,7 +7,6 @@
 */
 
 /** System Summary
-
    System consists of:
    Two 12v DC motors:
     Rudder Motor which drives the rudder
@@ -36,30 +35,17 @@
    while running diagnostics all normal motor operation stops
 */
 
-/** program classes
-
-   classes              Indentifiers            Comments
-
-    joystick               js                    reads x & y axis, computes speed & dir, loaded into wheel structures, for ISR to process
-
-   Other functions:
-
-    ISR () Interrupt Service Routine             process the PWM signals for the motors
-   setup()
-   loop()
-*/
-
 /* ISR */
-//uses counter 2 to generate a 500 micro second interrupt which pulses the stepper motors, max pulse freq is 2kHz
+//uses counter 2 to generate pwm pulses freq is 2kHz
 
 /** I/O
    all inputs have internal pullups enabled
    so switches are 0 when pressed, and a 1 when released
-   all pins defined at the beginning of the program, rather than in the classes, to see in one spot what i/o pins are allocatted or free
 */
 
 #include "JoyStick.h"
 #include "Switch.h"
+#include "motor.h"
 
 #define DEBUGSTARTUP 0
 
@@ -70,17 +56,11 @@ unsigned int interrupt_Counter = 0;         //used in main loop to show the ISR 
 const unsigned int one_Sec = 2000;          //used in main loop to show the ISR is running, flashes led off and on each second
 
 unsigned long  joys_Time_Of_Last_Scan = 0;     //track when we last scanned for joystick changes
+unsigned long  motor_Time_Of_Last_Scan = 0;    //track when we last updated motor speeds
 
 const long Debounce = 100;                    //debounce time for switch in millisecs
 
-/* Rudder Parameters */
-
-/* boom Parameters */
-
-/* all inputs & outputs (I/O) allocated below rather than in classes to ensure no overlaps or errors */
-
 /** motors
-
    define i/o for each motor driver board, each board has 2 inputs: direction & pwm
 */
 const uint8_t  rudder_Dir_Pin     = 8;      //sets direction rudder motor turns
@@ -89,13 +69,13 @@ const uint8_t  boom_Dir_Pin   = 7;          //sets the direction the boom motor 
 const uint8_t  boom_Pwm_Pin   = 6;          //PWM pulse to set the speed of the boom motor
 
 /** end of travel detectors
-
    define i/O for reed switches to detect end of travel for the chain on each motor
 */
 const uint8_t  rudder_Port_EndofTravel_Pin      = 2;
 const uint8_t  rudder_Starboard_EndofTravel_Pin = 3;
 const uint8_t  boom_Tight_EndofTravel_Pin       = 4;
 const uint8_t  boom_Loose_EndofTravel_Pin       = 5;
+
 /* define i/O for led */
 const uint8_t ledPin =  13; //LED connected to digital pin 13
 uint8_t led = LOW;  //initial state of led
@@ -107,7 +87,7 @@ unsigned long tmp1, tmp2;
 
 /* define objects */
 
-/* define motors */
+/* define joystick */
 JoyStick js;  //define joystick
 
 /* define reed switches */
@@ -115,6 +95,10 @@ Switch switch_rudder_Port_EndofTravel(rudder_Port_EndofTravel_Pin, Debounce);
 Switch switch_rudder_Starboard_EndofTravel(rudder_Starboard_EndofTravel_Pin, Debounce);
 Switch switch_boom_Tight_EndofTravel(boom_Tight_EndofTravel_Pin, Debounce);
 Switch switch_boom_Loose_EndofTravel(boom_Loose_EndofTravel_Pin, Debounce);
+
+/* define motors */
+Motor rudder_motor(rudder_Pwm_Pin, rudder_Dir_Pin);
+Motor boom_motor(boom_Pwm_Pin, boom_Dir_Pin);
 
 
 /* Interrupt Service Routine for timer 2
@@ -162,7 +146,7 @@ void setup(void)
   /* Timer 0, is 8 bits used by fuction millis();  Timer 1, 3, 4, 5 are 16 bits;  Timer 0, 2 are 8 bits
     timers used by anolgue write
 
-    Use Timer 2 to generate an interrupt every 500 microseconds to process step pulses to stepper mnotors
+    Use Timer 2 to generate an interrupt every 500 microseconds to process pwm pulses to motors
     for timer is 16x10^6 (clock speed) / [prescaler x freq] -1
     for 1kHz, prescaler = 64, cont = 124  */
 
@@ -179,16 +163,21 @@ void setup(void)
   return;
 }  //  end of setup()
 
+void process_X_Change(void)               //process the X change
+{
+
+}
+void process_Y_Change(void)               //process the Y change
+{
+
+}
+
 /** Main Loop
 
 
 */
 void loop(void)
 {
-#ifdef DEBUGISR1
-  unsigned long entry_Time, exit_Time;        //used to check overhead of ISR
-  unsigned long tmp1, tmp2;
-#endif
   if (interrupt_Counter >= one_Sec )  //check if one second has expired
   {
     digitalWrite(ledPin, led);    // continually turn led on for 1 sec, then off for 1 sec - shows we alive & interrupts working
@@ -197,36 +186,63 @@ void loop(void)
     interrupt_Counter = 0;        //reset counter
     sei();                        //interrupts on
   }
-
+  /* check for any joystick movement */
   if ((millis() - joys_Time_Of_Last_Scan) > JoyStick_Scan_Rate) //check if time to scan joystick for changes to x and Y axis
   {
     joys_Time_Of_Last_Scan = millis();    //yes, reset timer
-    bool flag;                         //flag to indicate joystick position has changed
-    flag = js.check_Y_Pos();              //must run both functions to ensure current x & y positions are updated
-    flag |= js.check_X_Pos();
-    if (flag)                             //check if x or y axis changed,
+
+    if (js.check_X_Pos())                 //check x axis of joystick
     {
-      //yes, do something
+      process_X_Change();                 //process the X change
+    }
+
+    if (js.check_Y_Pos())                 //check y axis of joystick
+    {
+      process_Y_Change();                 //process the Y change
     }
   }
-
-  if (switch_rudder_Port_EndofTravel.switch_Changed())
+  /* check if time to update motor speeds, provides controlled acceleration and de-accelaration of the motors */
+  if ((millis() - motor_Time_Of_Last_Scan) > Motor_Scan_Rate) //check if time to scan motors to update speed
   {
-    //yes, do something
+    motor_Time_Of_Last_Scan = millis();    //yes, reset timer
+    //boom
+    //rudder
   }
 
-  if (switch_rudder_Starboard_EndofTravel.switch_Changed())
+  /* check for any changes to end of travel reed switches */
+  if (switch_rudder_Port_EndofTravel.switch_Changed())      //check if switch has changed state
   {
-    //yes, do something
+    //yes, get new switch state
+    if (switch_rudder_Port_EndofTravel.get_Switch_State())  //if switch now closed
+    {
+      if (boom_motor.get_requested_speed != 0)              //check if moving. If already stopped, ignore switch change
+      {
+        if (boom_motor.get_requested_dir == REVERSE)        //moving, so check if moving to starboard
+        {
+          boom_motor.set_requested_speed = 0;               //yes, stop motor. If moving to port, ignore switch change
+        }
+      }
+    }
   }
-  if (switch_boom_Tight_EndofTravel.switch_Changed())
+  else                                                      //switch now open
   {
-    //yes, do something
+
   }
-  if (switch_boom_Loose_EndofTravel.switch_Changed())
-  {
-    //yes, do something
-  }
+
+}
+
+if (switch_rudder_Starboard_EndofTravel.switch_Changed())
+{
+  //yes, do something
+}
+if (switch_boom_Tight_EndofTravel.switch_Changed())
+{
+  //yes, do something
+}
+if (switch_boom_Loose_EndofTravel.switch_Changed())
+{
+  //yes, do something
+}
 }
 //end of loop()
 
