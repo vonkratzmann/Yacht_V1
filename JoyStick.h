@@ -1,6 +1,7 @@
-/** Class joyStick
-
-
+/** Class joyStick 
+ *
+ *
+ *
 */
 #ifndef JoyStick_h
 #define JoyStick_h
@@ -9,7 +10,7 @@
 
 /* ADC I/O for Joystick*/
 const uint8_t rudder_JoystickAnalogPin 		= 1;    //x axis of joystick
-const uint8_t mainsail_JoystickAnalogPin 	= 0;    //y xis of joystick
+const uint8_t boom_JoystickAnalogPin 	= 0;    //y xis of joystick
 
 
 /* joystick Parameters 
@@ -40,9 +41,7 @@ class JoyStick
 
   public:
     JoyStick ();
-    boolean    check_X_Pos (void);
-    boolean    check_Y_Pos (void);
-    void       process_X (uint8_t &, uint8_t &);
-    boolean    process_Y (uint8_t, uint8_t &, uint8_t &);
+    boolean    check_X_Pos (void);  //check if change in joystick x position
+    boolean    check_Y_Pos (void);  //check if change in joystick y position
 };
 #endif
