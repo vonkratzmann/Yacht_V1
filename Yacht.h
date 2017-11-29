@@ -5,43 +5,95 @@
 
 #include "arduino.h"
 
-/* define to run diagnostics which print to the serial monitor
-  comment out once code is finished
+/* define to diagnostics which print to the serial monitor
+  comment out before code is released
 
-  #define  DEBUG_FILE(x)     Serial.print(x)
+  #define  DEBUG
 */
-#define  DEBUG
+//#define  DEBUG
 
 #ifdef   DEBUG
 #define  DEBUG_PRINT(x)    Serial.print(x)
 #define  DEBUG_PRINTLN(x)  Serial.println(x)
-#define  DEBUG_FILE(x)     
+#define  DEBUG_FILE(x)
 #else
 #define  DEBUG_PRINT(x)
 #define  DEBUG_PRINTLN(x)
-#define  DEBUG_FILE(x)     
+#define  DEBUG_FILE(x)
 #endif
 
 /* define to run joystick diagnostics which force a value from the joystick
-  comment out once code is finished
-
-  #define  JOYSTICKDEBUG
+  comment out before code is released
+  #define  JOYSTICK_DEBUG
 */
-#ifdef   JOYSTICKDEBUG
-#define  DEBUG_JOYSTICK_Y_EQUALS_256     y_New = 256;
-#define  DEBUG_JOYSTICK_X_EQUALS_256     x_New = 256;
+//#define  JOYSTICK_DEBUG
+
+#ifdef   JOYSTICK_DEBUG
+#define  JOYSTICK_DEBUG_PRINT(x)    Serial.print(x)
+#define  JOYSTICK_DEBUG_PRINTLN(x)  Serial.println(x)
+#define  JOYSTICK_DEBUG_FILE(x)
 #else
-#define  DEBUG_JOYSTICK_Y_EQUALS_256      
-#define  DEBUG_JOYSTICK_X_EQUALS_256     
+#define  JOYSTICK_DEBUG_PRINT(x)
+#define  JOYSTICK_DEBUG_PRINTLN(x)
+#define  JOYSTICK_DEBUG_FILE(x)
 #endif
 
+/* define to run joystick diagnostics which force a value from the joystick
+  comment out before code is released
+  #define  JOYSTICK_FORCEDEBUG
+*/
+//#define  JOYSTICK_FORCEDEBUG
+ 
+#ifdef   JOYSTICK_FORCEDEBUG
+#define  JOYSTICK_DEBUG_Y_EQUALS_256     y_New = 256;
+#define  JOYSTICK_DEBUG_X_EQUALS_256     x_New = 256;
+#else
+#define  JOYSTICK_DEBUG_Y_EQUALS_256
+#define  JOYSTICK_DEBUG_X_EQUALS_256
+#endif
+
+/* define to run motor diagnostics which print to the serial monitor
+  comment out before code is released
+  #define  MOTOR_DEBUG
+*/
+//#define  MOTOR_DEBUG
+ 
+#ifdef   MOTOR_DEBUG
+#define  MOTOR_DEBUG_PRINT(x)    Serial.print(x)
+#define  MOTOR_DEBUG_PRINTLN(x)  Serial.println(x)
+#define  MOTOR_DEBUG_FILE(x)
+#else
+#define  MOTOR_DEBUG_PRINT(x)
+#define  MOTOR_DEBUG_PRINTLN(x)
+#define  MOTOR_DEBUG_FILE(x)
+#endif
+
+
+/* define to run switch diagnostics which print to the serial monitor
+  comment out before code is released
+  #define  SWITCH_DEBUG
+*/
+#define  SWITCH_DEBUG
+
+#ifdef   SWITCH_DEBUG
+#define  SWITCH_DEBUG_PRINT(x)    Serial.print(x)
+#define  SWITCH_DEBUG_PRINTLN(x)  Serial.println(x)
+#define  SWITCH_DEBUG_FILE(x)
+#else
+#define  SWITCH_DEBUG_PRINT(x)
+#define  SWITCH_DEBUG_PRINTLN(x)
+#define  SWITCH_DEBUG_FILE(x)
+#endif
+
+
 /* set up directions for motors */
-#define FORWARD    1
-#define REVERSE   0
-#define TOPORT    1
+#define FORWARD     1
+#define REVERSE     0
+#define TOPORT      1
 #define TOSTARBOARD 0
-#define TIGHTENING  1
-#define LOOSENING   0
+#define LOOSENING   1
+#define TIGHTENING  0
+
 
 /* Set up speed range for motors */
 const int MINSPEED = 0;
@@ -60,12 +112,11 @@ const uint8_t  boom_Pwm_Pin		= 6;         //PWM pulse to set the speed of the bo
 /** end of travel detectors
    define i/O for reed switches to detect end of travel for the chain on each motor
 */
-const uint8_t  rudder_Port_EndofTravel_Pin		= 2;
+const uint8_t  rudder_Port_EndofTravel_Pin		  = 2;
 const uint8_t  rudder_Starboard_EndofTravel_Pin	= 3;
-const uint8_t  boom_Tight_EndofTravel_Pin		= 4;
-const uint8_t  boom_Loose_EndofTravel_Pin		= 5;
+const uint8_t  boom_Loose_EndofTravel_Pin		    = 4;
+const uint8_t  boom_Tight_EndofTravel_Pin       = 5;
 
 /* define i/O for led */
 const uint8_t LedPin =  13; //LED connected to digital pin 13
-
 #endif

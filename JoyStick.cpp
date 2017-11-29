@@ -21,24 +21,24 @@ bool JoyStick::check_X_Axis (void)               //check joystick for any change
   bool x_Chnged = false;                        //flag joy stick position has changed
   x_New = analogRead(rudder_JoystickAnalogPin); //read joystick x position and put into x_New
 
-  DEBUG_JOYSTICK_X_EQUALS_256
+  JOYSTICK_DEBUG_X_EQUALS_256
 
   x_New &= noise_Mask;                          //zero bottom bits to prevent unnecessary calls in case of noise on ADC input
   if ( x_Cur != x_New)                          //Check if changed from last read
   {
     x_Chnged = true;                            //yes, set flag to say it has changed
 
-    DEBUG_FILE("Function: ");
-    DEBUG_FILE(__FILE__);
-    DEBUG_FILE(",");
-    DEBUG_PRINT(__FUNCTION__);
-    DEBUG_PRINT(" ");
-    DEBUG_PRINT("x_Cur: ");
-    DEBUG_PRINT(x_Cur);
-    DEBUG_PRINT(" ");
-    DEBUG_PRINT("x_New: ");
-    DEBUG_PRINT(x_New);
-    DEBUG_PRINT(" ");
+    JOYSTICK_DEBUG_FILE("Function: ");
+    JOYSTICK_DEBUG_FILE(__FILE__);
+    JOYSTICK_DEBUG_FILE(",");
+    JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+    JOYSTICK_DEBUG_PRINT(" ");
+    JOYSTICK_DEBUG_PRINT("x_Cur: ");
+    JOYSTICK_DEBUG_PRINT(x_Cur);
+    JOYSTICK_DEBUG_PRINT(" ");
+    JOYSTICK_DEBUG_PRINT("x_New: ");
+    JOYSTICK_DEBUG_PRINT(x_New);
+    JOYSTICK_DEBUG_PRINT(" ");
 
     diff = x_New - x_Cur;
     if (abs(diff) > JoyStick_Max_ROC)         //check if difference greater then max rate of change (ROC)
@@ -53,8 +53,8 @@ bool JoyStick::check_X_Axis (void)               //check joystick for any change
       x_Cur = x_New;                          // change less than max rate of change, so accept new value
     }
 
-    DEBUG_PRINT("updated x_Cur: ");
-    DEBUG_PRINTLN(x_Cur);
+    JOYSTICK_DEBUG_PRINT("updated x_Cur: ");
+    JOYSTICK_DEBUG_PRINTLN(x_Cur);
 
   }
   return x_Chnged;
@@ -71,24 +71,24 @@ bool JoyStick::check_Y_Axis (void)               //check joystick for any change
   bool y_Chnged = false;                        //flag joy stick position has changed
   y_New = analogRead(boom_JoystickAnalogPin);   //read joystick y position and put into y_new
 
-  DEBUG_JOYSTICK_Y_EQUALS_256
+  JOYSTICK_DEBUG_Y_EQUALS_256
 
   y_New &= noise_Mask;                          //zero bottom bits to prevent unnecessary calls in case of noise on ADC input
   if ( y_Cur != y_New)                          //Check if changed from last read
   {
     y_Chnged = true;                             //yes, set flag to say it has changed
 
-    DEBUG_FILE("Function: ");
-    DEBUG_FILE(__FILE__);
-    DEBUG_FILE(",");
-    DEBUG_PRINT(__FUNCTION__);
-    DEBUG_PRINT(" ");
-    DEBUG_PRINT("y_Cur: ");
-    DEBUG_PRINT(y_Cur);
-    DEBUG_PRINT(" ");
-    DEBUG_PRINT("y_New: ");
-    DEBUG_PRINT(y_New);
-    DEBUG_PRINT(" ");
+    JOYSTICK_DEBUG_FILE("Function: ");
+    JOYSTICK_DEBUG_FILE(__FILE__);
+    JOYSTICK_DEBUG_FILE(",");
+    JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+    JOYSTICK_DEBUG_PRINT(" ");
+    JOYSTICK_DEBUG_PRINT("y_Cur: ");
+    JOYSTICK_DEBUG_PRINT(y_Cur);
+    JOYSTICK_DEBUG_PRINT(" ");
+    JOYSTICK_DEBUG_PRINT("y_New: ");
+    JOYSTICK_DEBUG_PRINT(y_New);
+    JOYSTICK_DEBUG_PRINT(" ");
 
     diff = y_New - y_Cur;
     if (abs(diff) > JoyStick_Max_ROC)       //check if difference greater then max rate of change (ROC)
@@ -103,8 +103,8 @@ bool JoyStick::check_Y_Axis (void)               //check joystick for any change
       y_Cur = y_New;                        // change less than max rate of change, so accept new value
     }
 
-    DEBUG_PRINT("updated y_Cur: ");
-    DEBUG_PRINTLN(y_Cur);
+    JOYSTICK_DEBUG_PRINT("updated y_Cur: ");
+    JOYSTICK_DEBUG_PRINTLN(y_Cur);
   }
   return y_Chnged;
 }
@@ -121,13 +121,13 @@ void JoyStick::process_X(int *new_Spd, uint8_t *new_Dir)    //process change for
   {
     *new_Spd = 0;                                               //yes, stopped so update speed to say stopped
 
-    DEBUG_FILE("Function: ");
-    DEBUG_FILE(__FILE__);
-    DEBUG_FILE(",");
-    DEBUG_PRINT(__FUNCTION__);
-    DEBUG_PRINT("(stopped) ");
-    DEBUG_PRINT("new_Spd: ");
-    DEBUG_PRINTLN(*new_Spd);
+    JOYSTICK_DEBUG_FILE("Function: ");
+    JOYSTICK_DEBUG_FILE(__FILE__);
+    JOYSTICK_DEBUG_FILE(",");
+    JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+    JOYSTICK_DEBUG_PRINT("(stopped) ");
+    JOYSTICK_DEBUG_PRINT("new_Spd: ");
+    JOYSTICK_DEBUG_PRINTLN(*new_Spd);
   }
   else                                                          //no, joystick requesting movement
   {
@@ -136,32 +136,32 @@ void JoyStick::process_X(int *new_Spd, uint8_t *new_Dir)    //process change for
       *new_Dir = TOSTARBOARD;                                   //yes, moving to starboard
       *new_Spd = map(x_Cur, Stopped_Low - 1, 0, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
-      DEBUG_FILE("Function: ");
-      DEBUG_FILE(__FILE__);
-      DEBUG_FILE(",");
-      DEBUG_PRINT(__FUNCTION__);
-      DEBUG_PRINT("(low) ");
-      DEBUG_PRINT("new_Spd: ");
-      DEBUG_PRINT(*new_Spd);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT("new_Dir: ");
-      DEBUG_PRINTLN(*new_Dir);
+      JOYSTICK_DEBUG_FILE("Function: ");
+      JOYSTICK_DEBUG_FILE(__FILE__);
+      JOYSTICK_DEBUG_FILE(",");
+      JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+      JOYSTICK_DEBUG_PRINT("(low) ");
+      JOYSTICK_DEBUG_PRINT("new_Spd: ");
+      JOYSTICK_DEBUG_PRINT(*new_Spd);
+      JOYSTICK_DEBUG_PRINT(" ");
+      JOYSTICK_DEBUG_PRINT("new_Dir: ");
+      JOYSTICK_DEBUG_PRINTLN(*new_Dir);
     }
     else                                                        //no, request to move to port
     {
       *new_Dir = TOPORT;
       *new_Spd = map(x_Cur, Stopped_High + 1, 1023, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
-      DEBUG_FILE("Function: ");
-      DEBUG_FILE(__FILE__);
-      DEBUG_FILE(",");
-      DEBUG_PRINT(__FUNCTION__);
-      DEBUG_PRINT("(high) ");
-      DEBUG_PRINT("new_Spd: ");
-      DEBUG_PRINT(*new_Spd);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT("new_Dir: ");
-      DEBUG_PRINTLN(*new_Dir);
+      JOYSTICK_DEBUG_FILE("Function: ");
+      JOYSTICK_DEBUG_FILE(__FILE__);
+      JOYSTICK_DEBUG_FILE(",");
+      JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+      JOYSTICK_DEBUG_PRINT("(high) ");
+      JOYSTICK_DEBUG_PRINT("new_Spd: ");
+      JOYSTICK_DEBUG_PRINT(*new_Spd);
+      JOYSTICK_DEBUG_PRINT(" ");
+      JOYSTICK_DEBUG_PRINT("new_Dir: ");
+      JOYSTICK_DEBUG_PRINTLN(*new_Dir);
     }
   }
 }
@@ -177,13 +177,13 @@ void JoyStick::process_Y(int *new_Spd, uint8_t *new_Dir)    //process change for
   {
     *new_Spd = 0;                                               //yes, stopped so update speed to say stopped
 
-    DEBUG_FILE("Function: ");
-    DEBUG_FILE(__FILE__);
-    DEBUG_FILE(",");
-    DEBUG_PRINT(__FUNCTION__);
-    DEBUG_PRINT("(stopped) ");
-    DEBUG_PRINT("new_Spd: ");
-    DEBUG_PRINTLN(*new_Spd);
+    JOYSTICK_DEBUG_FILE("Function: ");
+    JOYSTICK_DEBUG_FILE(__FILE__);
+    JOYSTICK_DEBUG_FILE(",");
+    JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+    JOYSTICK_DEBUG_PRINT("(stopped) ");
+    JOYSTICK_DEBUG_PRINT("new_Spd: ");
+    JOYSTICK_DEBUG_PRINTLN(*new_Spd);
   }
   else                                                          //no, joystick requesting movement
   {
@@ -192,32 +192,32 @@ void JoyStick::process_Y(int *new_Spd, uint8_t *new_Dir)    //process change for
       *new_Dir = TIGHTENING;                                    //yes, tightening rope to boom
       *new_Spd = map(y_Cur, Stopped_Low - 1, 0, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
-      DEBUG_FILE("Function: ");
-      DEBUG_FILE(__FILE__);
-      DEBUG_FILE(",");
-      DEBUG_PRINT(__FUNCTION__);
-      DEBUG_PRINT("(low) ");
-      DEBUG_PRINT("new_Spd: ");
-      DEBUG_PRINT(*new_Spd);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT("new_Dir: ");
-      DEBUG_PRINTLN(*new_Dir);
+      JOYSTICK_DEBUG_FILE("Function: ");
+      JOYSTICK_DEBUG_FILE(__FILE__);
+      JOYSTICK_DEBUG_FILE(",");
+      JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+      JOYSTICK_DEBUG_PRINT("(low) ");
+      JOYSTICK_DEBUG_PRINT("new_Spd: ");
+      JOYSTICK_DEBUG_PRINT(*new_Spd);
+      JOYSTICK_DEBUG_PRINT(" ");
+      JOYSTICK_DEBUG_PRINT("new_Dir: ");
+      JOYSTICK_DEBUG_PRINTLN(*new_Dir);
     }
     else                                                        //no, request to move to loosen the rope to the boom
     {
       *new_Dir = LOOSENING;
       *new_Spd = map(y_Cur, Stopped_High + 1, 1023, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
-      DEBUG_FILE("Function: ");
-      DEBUG_PRINT(__FUNCTION__);
-      DEBUG_FILE(",");
-      DEBUG_FILE(__FILE__);
-      DEBUG_PRINTLN("(high) ");
-      DEBUG_PRINT("new_Spd: ");
-      DEBUG_PRINT(*new_Spd);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT("new_Dir: ");
-      DEBUG_PRINTLN(*new_Dir);
+      JOYSTICK_DEBUG_FILE("Function: ");
+      JOYSTICK_DEBUG_PRINT(__FUNCTION__);
+      JOYSTICK_DEBUG_FILE(",");
+      JOYSTICK_DEBUG_FILE(__FILE__);
+      JOYSTICK_DEBUG_PRINTLN("(high) ");
+      JOYSTICK_DEBUG_PRINT("new_Spd: ");
+      JOYSTICK_DEBUG_PRINT(*new_Spd);
+      JOYSTICK_DEBUG_PRINT(" ");
+      JOYSTICK_DEBUG_PRINT("new_Dir: ");
+      JOYSTICK_DEBUG_PRINTLN(*new_Dir);
     }
   }
 }
