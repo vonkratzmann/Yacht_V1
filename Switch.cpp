@@ -5,7 +5,7 @@
    If set to 1 and switch state changes prints out the switch state
    Normally set to zero
 */
-#define DEBUGSW 1
+
 /* Switch::Switch()
   Constructor
   sets up I/O pin for switch
@@ -41,8 +41,8 @@ bool Switch::switch_Changed(void)
   {
     previous_Debounced_State = switch_State;	      //yes, update state
 #ifdef DEBUGSW
-    Serial.print("Switch change, state: ");
-    Serial.println(switch_State);
+    DEBUG_PRINT("Switch change, state: ");
+    DEBUG_PRINTLN(switch_State);
 #endif
     last_Time_Changed = millis();			  //reset timer, ready for the next change in switch postion
     return true;							          //tell them there was a change in the switch

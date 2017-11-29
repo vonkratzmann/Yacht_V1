@@ -48,9 +48,6 @@
 #include "Switch.h"
 #include "Motor.h"
 
-#define DEBUGISR1 0
-#define DEBUGISR2 0
-
 int interrupt_Counter = 0;           //used in main loop to show the ISR is running
 const int one_Sec = 1000;            //used in main loop to show the ISR is running, flashes led off and on each second
 
@@ -115,12 +112,10 @@ void setup(void)
      If set to 1 prints out startup maessage
      Normally set to zero
   */
-#define DEBUGSTARTUP 0
-
   Serial.begin(9600);                   //set up serial port for any debug prints
-#ifdef DEBUGSTARTUP
-  Serial.println("Started");
-#endif
+
+  DEBUG_PRINTLN("Started");
+
   /* Set up timer interrupt */
 
   /* Timer 0, is 8 bits used by fuction millis();  Timer 1, 3, 4, 5 are 16 bits;  Timer 0, 2 are 8 bits

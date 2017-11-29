@@ -1,22 +1,34 @@
 /** Yacht parameters
- * 
- *
- *
+
+
+
 */
 
 #ifndef Yacht_h
 #define Yacht_h
 
 #include "arduino.h"
+/* define to run diagnostics
+  comment out once code is finished
+*/
+#define DEBUG
 
 /* set up directions for motors */
-
 #define FORWARD		1
 #define REVERSE		0
 #define TOPORT		1
 #define TOSTARBOARD	0
 #define TIGHTENING	0
 #define LOOSENING 	1
+
+/* set up diagnostic code */
+#ifdef DEBUG
+#define  DEBUG_PRINT(x)    Serial.print(x)
+#define  DEBUG_PRINTLN(x)  Serial.println(x)
+#else
+#define  DEBUG_PRINT(x)
+#define  DEBUG_PRINTLN(x)
+#endif
 
 /* Set up speed range for motors */
 const int MINSPEED = 0;

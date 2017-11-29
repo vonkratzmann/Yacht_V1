@@ -1,12 +1,6 @@
 #include "Yacht.h"
 #include "JoyStick.h"
 
-/* Diagnostics for joystick
-   If set to 1 prints out x and y position on the serial monitor for the joystick
-   Normally set to zero
-*/
-#define DEBUGJOYSTICK 0
-
 /* JoyStick constructor
      initialses current x and y positions to the centre of the joystick
 */
@@ -31,13 +25,13 @@ bool JoyStick::check_X_Pos (void)               //check joystick for any changes
   {
     x_Chnged = true;                            //yes, set flag to say it has changed
     // print out x values if in debug
-#ifdef DEBUGJOYSTICK
-    Serial.println("JoyStick::check_X_Pos");
-    Serial.print("jsxcur: ");
-    Serial.println(x_Cur);
-    Serial.print("jsxnew: ");
-    Serial.println(x_New);
-#endif
+
+    DEBUG_PRINTLN("JoyStick::check_X_Pos");
+    DEBUG_PRINT("jsxcur: ");
+    DEBUG_PRINTLN(x_Cur);
+    DEBUG_PRINT("jsxnew: ");
+    DEBUG_PRINTLN(x_New);
+
     diff = x_New - x_Cur;
     if (abs(diff) > JoyStick_Max_ROC)         //check if difference greater then max rate of change (ROC)
     { //limit max acceleration to max rate of change
@@ -50,10 +44,10 @@ bool JoyStick::check_X_Pos (void)               //check joystick for any changes
     {
       x_Cur = x_New;                          // change less than max rate of change, so accept new value
     }
-#ifdef DEBUGJOYSTICK
-    Serial.print("updated jsxcur: ");
-    Serial.println(x_Cur);
-#endif
+
+    DEBUG_PRINT("updated jsxcur: ");
+    DEBUG_PRINTLN(x_Cur);
+
   }
   return x_Chnged;
 }
@@ -72,13 +66,13 @@ bool JoyStick::check_Y_Pos (void)               //check joystick for any changes
   if ( y_Cur != y_New)                          //Check if changed from last read
   {
     // print out y values if in debug
-#ifdef DEBUGJOYSTICK
-    Serial.println("JoyStick::check_Y_Pos");
-    Serial.print("jsycur: ");
-    Serial.println(y_Cur);
-    Serial.print("jsynew: ");
-    Serial.println(y_New);
-#endif
+
+    DEBUG_PRINTLN("JoyStick::check_Y_Pos");
+    DEBUG_PRINT("jsycur: ");
+    DEBUG_PRINTLN(y_Cur);
+    DEBUG_PRINT("jsynew: ");
+    DEBUG_PRINTLN(y_New);
+
     diff = y_New - y_Cur;
     if (abs(diff) > JoyStick_Max_ROC)       //check if difference greater then max rate of change (ROC)
     { //limit max acceleration to max rate of change
@@ -91,10 +85,10 @@ bool JoyStick::check_Y_Pos (void)               //check joystick for any changes
     {
       y_Cur = y_New;                        // change less than max rate of change, so accept new value
     }
-#ifdef DEBUGJOYSTICK
-    Serial.print("updated jsycur: ");
-    Serial.println(y_Cur);
-#endif
+
+    DEBUG_PRINT("updated jsycur: ");
+    DEBUG_PRINTLN(y_Cur);
+
   }
   return y_Chnged;
 }
@@ -110,11 +104,11 @@ void JoyStick::process_X(int *new_Spd, uint8_t *new_Dir)    //process change for
   if (x_Cur <= Stopped_High && x_Cur >= Stopped_Low)            //check if in the stopped range
   {
     *new_Spd = 0;                                               //yes, stopped so update speed to say stopped
-#ifdef DEBUGJOYSTICK
-    Serial.println("JoyStick::process X (stopped)");
-    Serial.print("new_Spd: ");
-    Serial.println(*new_Spd);
-#endif
+
+    DEBUG_PRINTLN("JoyStick::process X (stopped)");
+    DEBUG_PRINT("new_Spd: ");
+    DEBUG_PRINTLN(*new_Spd);
+
   }
   else                                                          //no, joystick requesting movement
   {
@@ -122,25 +116,25 @@ void JoyStick::process_X(int *new_Spd, uint8_t *new_Dir)    //process change for
     { 
       *new_Dir = TOSTARBOARD;                                   //yes, moving to starboard
       *new_Spd = map(x_Cur, Stopped_Low - 1, 0, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
-#ifdef DEBUGJOYSTICK
-      Serial.println("JoyStick::process X (low)");
-      Serial.print("new_Spd: ");
-      Serial.println(*new_Spd);
-      Serial.print("new_Dir: ");
-      Serial.println(*new_Dir);
-#endif
+
+      DEBUG_PRINTLN("JoyStick::process X (low)");
+      DEBUG_PRINT("new_Spd: ");
+      DEBUG_PRINTLN(*new_Spd);
+      DEBUG_PRINT("new_Dir: ");
+      DEBUG_PRINTLN(*new_Dir);
+
     }
     else                                                        //no, request to move to port
     {
       *new_Dir = TOPORT;
       *new_Spd = map(x_Cur, Stopped_High + 1, 1023, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
-#ifdef DEBUGJOYSTICK
-      Serial.println("JoyStick::process X (high)");
-      Serial.print("new_Spd: ");
-      Serial.println(*new_Spd);
-      Serial.print("new_Dir: ");
-      Serial.println(*new_Dir);
-#endif
+
+      DEBUG_PRINTLN("JoyStick::process X (high)");
+      DEBUG_PRINT("new_Spd: ");
+      DEBUG_PRINTLN(*new_Spd);
+      DEBUG_PRINT("new_Dir: ");
+      DEBUG_PRINTLN(*new_Dir);
+
     }
   }
 }
