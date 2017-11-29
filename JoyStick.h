@@ -43,8 +43,8 @@ class JoyStick
 
   public:
     JoyStick ();
-    bool    check_X_Pos (void);  //check if change in joystick x position
-    bool    check_Y_Pos (void);  //check if change in joystick y position
+    bool    check_X_Axis (void);  //check if change in joystick x position
+    bool    check_Y_Axis (void);  //check if change in joystick y position
     void    process_X(int *spd, uint8_t *dir); // process change for x axis of joystick
     void    process_Y(int *spd, uint8_t *dir); // process change for y axis of joystick
 };

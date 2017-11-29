@@ -97,9 +97,7 @@ ISR(TIMER2_COMPA_vect)
   return;
 }  //end of ISR
 
-
 /** Setup
-
 
 */
 void setup(void)
@@ -140,24 +138,23 @@ void setup(void)
 
 /** Main Loop
 
-
 */
 void loop(void)
 {
   if (interrupt_Counter >= one_Sec )  //check if one second has expired
   {
-    digitalWrite(LedPin, led);    // continually turn led on and off every second - shows we alive & interrupts working
-    led ? led = LOW : led = HIGH; // swap led state from high to low or low to high
-    cli();                        //interrupts off
-    interrupt_Counter = 0;        //reset counter
-    sei();                        //interrupts on
+    digitalWrite(LedPin, led);                 // continually turn led on and off every second - shows we alive & interrupts working
+    led ? led = LOW : led = HIGH;              // swap led state from high to low or low to high
+    cli();                                     //interrupts off
+    interrupt_Counter = 0;                     //reset counter
+    sei();                                     //interrupts on
   }
   /* check for any joystick movement and update motor speeds */
   if ((millis() - joys_Time_Of_Last_Scan) > JoyStick_Scan_Rate) //check if time to scan joystick for changes to x and Y axis
   {
     joys_Time_Of_Last_Scan = millis();        //yes, reset timer
 
-    if (js.check_X_Pos())                     //check if x axis of joystick has changed
+    if (js.check_X_Axis())                     //check if x axis of joystick has changed
     { //yes, process the X change
       int spd;                                //local variabe to store new speed
       uint8_t dir;                            //local variabe to store new direction
@@ -166,7 +163,7 @@ void loop(void)
       rudder_Motor.set_Requested_Dir(dir);    //set new direction
     }
 
-    if (js.check_Y_Pos())                     //check if y axis of joystick has changed
+    if (js.check_Y_Axis())                     //check if y axis of joystick has changed
     { //yes, process the Y change
       int spd;                                //local variabe to store new speed
       uint8_t dir;                            //local variabe to store new direction
@@ -175,11 +172,13 @@ void loop(void)
       boom_Motor.set_Requested_Dir(dir);      //set new direction
     }
 
-    rudder_Motor.update_Speed();
-    rudder_Motor.update_Dir();
-    //boom
+    rudder_Motor.update_Speed();              //update rudder motor speed from the requested speed
+    rudder_Motor.update_Dir();                //update rudder motor direction from the requested direction
+  
+    boom_Motor.update_Speed();                //update boom motor speed from the requested speed
+    boom_Motor.update_Dir();                  //update boom motor direction from the requested direction
 
-    motor_Time_Of_Last_Scan = millis();    //yes, reset timer
+    motor_Time_Of_Last_Scan = millis();       //yes, reset timer
   }
 
   /* check for any changes to end of travel reed switches
