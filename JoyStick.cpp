@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include "Yacht.h"
 #include "JoyStick.h"
 
 /* Diagnostics for joystick
@@ -19,13 +19,12 @@ JoyStick::JoyStick ()
 /* JoyStick check x position
     reads joystick, compares current and new
     masks bottom bits to prevent unwanted noise and doing unnecessary processing
-    limits change
+    limits rate of change
     returns true if position has changed
 */
 bool JoyStick::check_X_Pos (void)               //check joystick for any changes
 {
-  bool x_Chnged;                                //flag joy stick position has changed
-  x_Chnged = false;                             //reset flag
+  bool x_Chnged = false;                        //flag joy stick position has changed
   x_New = analogRead(rudder_JoystickAnalogPin); //read joystick x position and put into x_New
   x_New &= noise_Mask;                          //zero bottom bits to prevent unnecessary calls in case of noise on ADC input
   if ( x_Cur != x_New)                          //Check if changed from last read
@@ -33,6 +32,7 @@ bool JoyStick::check_X_Pos (void)               //check joystick for any changes
     x_Chnged = true;                            //yes, set flag to say it has changed
     // print out x values if in debug
 #ifdef DEBUGJOYSTICK
+    Serial.println("JoyStick::check_X_Pos");
     Serial.print("jsxcur: ");
     Serial.println(x_Cur);
     Serial.print("jsxnew: ");
@@ -47,7 +47,13 @@ bool JoyStick::check_X_Pos (void)               //check joystick for any changes
         x_Cur -= JoyStick_Max_ROC;            //reading has gone down,so limit acceleration by subtracting max rate of change
     }
     else
+    {
       x_Cur = x_New;                          // change less than max rate of change, so accept new value
+    }
+#ifdef DEBUGJOYSTICK
+    Serial.print("updated jsxcur: ");
+    Serial.println(x_Cur);
+#endif
   }
   return x_Chnged;
 }
@@ -55,19 +61,19 @@ bool JoyStick::check_X_Pos (void)               //check joystick for any changes
 /* JoyStick check y position
    reads joystick, compares current and new
    masks bottom bits to prevent unwanted noise and doing unnecessary processing
-   limits change
+   limits rate of change
    returns true if position has changed
 */
 bool JoyStick::check_Y_Pos (void)               //check joystick for any changes
 {
-  bool y_Chnged;                                //flag joy stick position has changed
-  y_Chnged = false;                             //reset flag
+  bool y_Chnged = false;                        //flag joy stick position has changed
   y_New = analogRead(boom_JoystickAnalogPin);//read joystick y position and put into y_new
   y_New &= noise_Mask;                          //zero bottom bits to prevent unnecessary calls in case of noise on ADC input
   if ( y_Cur != y_New)                          //Check if changed from last read
   {
     // print out y values if in debug
 #ifdef DEBUGJOYSTICK
+    Serial.println("JoyStick::check_Y_Pos");
     Serial.print("jsycur: ");
     Serial.println(y_Cur);
     Serial.print("jsynew: ");
@@ -82,9 +88,83 @@ bool JoyStick::check_Y_Pos (void)               //check joystick for any changes
         y_Cur -= JoyStick_Max_ROC;          //reading has gone down,so limit acceleration by subtracting max rate of change
     }
     else
+    {
       y_Cur = y_New;                        // change less than max rate of change, so accept new value
+    }
+#ifdef DEBUGJOYSTICK
+    Serial.print("updated jsycur: ");
+    Serial.println(y_Cur);
+#endif
   }
   return y_Chnged;
 }
 
-
+/* JoyStick::process_X
+   accepts two pointer arguments to allow update of new speed and direction
+   checks if its in stopped range, if yes sets speed to zero
+   else checks requested direction and updates direction
+   then scales the new speed bewteen the min and max speeds based on joystick position
+*/
+void JoyStick::process_X(unsigned int *new_Spd, uint8_t *new_Dir)    //process change for x axis of joystick
+{
+  if (x_Cur <= Stopped_High && x_Cur >= Stopped_Low)            //check if in the stopped range
+  {
+    *new_Spd = 0;                                               //yes, stopped so update speed to say stopped
+#ifdef DEBUGJOYSTICK
+    Serial.println("JoyStick::process X (stopped)");
+    Serial.print("new_Spd: ");
+    Serial.println(*new_Spd);
+#endif
+  }
+  else                                                          //no, joystick requesting movement
+  {
+    if (x_Cur < Stopped_Low)                                    //is joystick asking to move to starboard
+    { 
+      *new_Dir = TOSTARBOARD;                                   //yes, moving to starboard
+      *new_Spd = map(x_Cur, Stopped_Low - 1, 0, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
+#ifdef DEBUGJOYSTICK
+      Serial.println("JoyStick::process X (low)");
+      Serial.print("new_Spd: ");
+      Serial.println(*new_Spd);
+      Serial.print("new_Dir: ");
+      Serial.println(*new_Dir);
+#endif
+    }
+    else                                                        //no, request to move to port
+    {
+      *new_Dir = TOPORT;
+      *new_Spd = map(x_Cur, Stopped_High + 1, 1023, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
+#ifdef DEBUGJOYSTICK
+      Serial.println("JoyStick::process X (high)");
+      Serial.print("new_Spd: ");
+      Serial.println(*new_Spd);
+      Serial.print("new_Dir: ");
+      Serial.println(*new_Dir);
+#endif
+    }
+  }
+}
+/* JoyStick::process_Y
+   accepts two pointer arguments to allow update of new speed and direction
+   checks if its in stopped range, if yes sets speed to zero
+   else checks requested direction and updates direction
+   then scales the new speed bewteen the min and max speeds based on joystick position
+*/
+void JoyStick::process_Y(unsigned int *new_Spd, uint8_t *new_Dir)    //process change for Y axis of joystick
+{
+  if (y_Cur <= Stopped_High && y_Cur >= Stopped_Low)            //check if in the stopped range
+    *new_Spd = 0;                                                    //yes, stopped so update speed to say stopped
+  else                                                          //no, joystick requesting movement
+  {
+    if (y_Cur < Stopped_Low)                                    //is joystick asking to tighten the ripe to the boom
+    { //yes
+      *new_Dir = TIGHTENING;                                    //yes, tightening rope to boom
+      *new_Spd = map(y_Cur, Stopped_Low - 1, 0, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
+    }
+    else                                                        //no, request to move to loosen the rope to the boom
+    {
+      *new_Dir = LOOSENING;
+      *new_Spd = map(y_Cur, Stopped_High + 1, 1023, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
+    }
+  }
+}

@@ -43,42 +43,26 @@
    so switches are 0 when pressed, and a 1 when released
 */
 
+#include "Yacht.h"
 #include "JoyStick.h"
 #include "Switch.h"
-#include "motor.h"
-
-#define DEBUGSTARTUP 0
+#include "Motor.h"
 
 #define DEBUGISR1 0
 #define DEBUGISR2 0
 
-unsigned int interrupt_Counter = 0;         //used in main loop to show the ISR is running
-const unsigned int one_Sec = 1000;          //used in main loop to show the ISR is running, flashes led off and on each second
+/* Set up speed range for motors */
+#define MINSPEED = 0
+#define MAXSPEED = 512
 
-unsigned long  joys_Time_Of_Last_Scan = 0;     //track when we last scanned for joystick changes
-unsigned long  motor_Time_Of_Last_Scan = 0;    //track when we last updated motor speeds
+unsigned int interrupt_Counter = 0;           //used in main loop to show the ISR is running
+const unsigned int one_Sec = 1000;            //used in main loop to show the ISR is running, flashes led off and on each second
 
-const long Debounce = 100;                    //debounce time for switch in millisecs
+unsigned long  joys_Time_Of_Last_Scan = 0;    //track when we last scanned for joystick changes
+unsigned long  motor_Time_Of_Last_Scan = 0;   //track when we last updated motor speeds
 
-/** motors
-   define i/o for each motor driver board, each board has 2 inputs: direction & pwm
-*/
-const uint8_t  rudder_Dir_Pin     = 8;      //sets direction rudder motor turns
-const uint8_t  rudder_Pwm_Pin     = 9;      //PWM pulse to set the speed of the rudder motor
-const uint8_t  boom_Dir_Pin   = 7;          //sets the direction the boom motor turns
-const uint8_t  boom_Pwm_Pin   = 6;          //PWM pulse to set the speed of the boom motor
+uint8_t led = LOW;                            //state of led, initially off
 
-/** end of travel detectors
-   define i/O for reed switches to detect end of travel for the chain on each motor
-*/
-const uint8_t  rudder_Port_EndofTravel_Pin      = 2;
-const uint8_t  rudder_Starboard_EndofTravel_Pin = 3;
-const uint8_t  boom_Tight_EndofTravel_Pin       = 4;
-const uint8_t  boom_Loose_EndofTravel_Pin       = 5;
-
-/* define i/O for led */
-const uint8_t ledPin =  13; //LED connected to digital pin 13
-uint8_t led = LOW;  //initial state of led
 
 #ifdef DEBUGISR1
 unsigned long entry_Time, exit_Time;        //used to check overhead of ISR
@@ -91,25 +75,19 @@ unsigned long tmp1, tmp2;
 JoyStick js;  //define joystick
 
 /* define reed switches */
-Switch switch_rudder_Port(rudder_Port_EndofTravel_Pin, Debounce);
-Switch switch_rudder_Starboard(rudder_Starboard_EndofTravel_Pin, Debounce);
-Switch switch_boom_Tight(boom_Tight_EndofTravel_Pin, Debounce);
-Switch switch_boom_Loose(boom_Loose_EndofTravel_Pin, Debounce);
+Switch switch_Rudder_Port(rudder_Port_EndofTravel_Pin, Debounce);
+Switch switch_Rudder_Starboard(rudder_Starboard_EndofTravel_Pin, Debounce);
+Switch switch_Boom_Tight(boom_Tight_EndofTravel_Pin, Debounce);
+Switch switch_Boom_Loose(boom_Loose_EndofTravel_Pin, Debounce);
 
 /* define motors */
-Motor rudder_motor(rudder_Pwm_Pin, rudder_Dir_Pin);
-Motor boom_motor(boom_Pwm_Pin, boom_Dir_Pin);
+Motor rudder_Motor(rudder_Pwm_Pin, rudder_Dir_Pin);
+Motor boom_Motor(boom_Pwm_Pin, boom_Dir_Pin);
 
 
 /* Interrupt Service Routine for timer 2
-
-  Each stepper has a counter which determines the rate at which the stepper motor is pulsed.
-  The counter is decremented, if zero the step input into the steeper motor driver is set high and the counter reloaded;
-  on the next timer increment the step input is set low.
-
-  ISR also checks if the step pulse ouput is high, if so sets it low
-
-  Increments activity counter, for processing by main loop */
+  to be used for motor
+*/
 
 ISR(TIMER2_COMPA_vect)
 {
@@ -134,12 +112,18 @@ ISR(TIMER2_COMPA_vect)
 void setup(void)
 {
   /* set up inputs using internal pull up resistors and set up outputs */
-  pinMode(ledPin,          OUTPUT);
-  digitalWrite(ledPin,       HIGH);     // sets the LED on
+  pinMode(LedPin,          OUTPUT);
+  digitalWrite(LedPin,       HIGH);     // sets the LED on
+
+  /* Diagnostics for startup
+     If set to 1 prints out startup maessage
+     Normally set to zero
+  */
+#define DEBUGSTARTUP 0
 
   Serial.begin(9600);                   //set up serial port for any debug prints
 #ifdef DEBUGSTARTUP
-  Serial.println("started");
+  Serial.println("Started");
 #endif
   /* Set up timer interrupt */
 
@@ -163,15 +147,6 @@ void setup(void)
   return;
 }  //  end of setup()
 
-void process_X_Change(void)               //process the X change
-{
-
-}
-void process_Y_Change(void)               //process the Y change
-{
-
-}
-
 /** Main Loop
 
 
@@ -180,70 +155,90 @@ void loop(void)
 {
   if (interrupt_Counter >= one_Sec )  //check if one second has expired
   {
-    digitalWrite(ledPin, led);    // continually turn led on for 1 sec, then off for 1 sec - shows we alive & interrupts working
+    digitalWrite(LedPin, led);    // continually turn led on and off every second - shows we alive & interrupts working
     led ? led = LOW : led = HIGH; // swap led state from high to low or low to high
     cli();                        //interrupts off
     interrupt_Counter = 0;        //reset counter
     sei();                        //interrupts on
   }
-  /* check for any joystick movement */
+  /* check for any joystick movement and update motor speeds */
   if ((millis() - joys_Time_Of_Last_Scan) > JoyStick_Scan_Rate) //check if time to scan joystick for changes to x and Y axis
   {
-    joys_Time_Of_Last_Scan = millis();    //yes, reset timer
+    joys_Time_Of_Last_Scan = millis();        //yes, reset timer
 
-    if (js.check_X_Pos())                 //check x axis of joystick
-    {
-      process_X_Change();                 //process the X change
+    if (js.check_X_Pos())                     //check if x axis of joystick has changed
+    { //yes, process the X change
+      unsigned int spd;                            //local variabe to store new speed
+      uint8_t      dir;                            //local variabe to store new direction
+      js.process_X(&spd, &dir);               //get new speed and direction
+      rudder_Motor.set_Requested_Speed(spd);  //set new speed
+      rudder_Motor.set_Requested_Dir(dir);    //set new direction
     }
 
-    if (js.check_Y_Pos())                 //check y axis of joystick
-    {
-      process_Y_Change();                 //process the Y change
+    if (js.check_Y_Pos())                     //check if y axis of joystick has changed
+    { //yes, process the Y change
+      unsigned int spd;                       //local variabe to store new speed
+      uint8_t      dir;                       //local variabe to store new direction
+      js.process_Y(&spd, &dir);               //get new speed and direction
+      boom_Motor.set_Requested_Speed(spd);    //set new speed
+      boom_Motor.set_Requested_Dir(dir);      //set new direction
     }
-  }
-  /* check if time to update motor speeds, provides controlled acceleration and de-accelaration of the motors */
-  if ((millis() - motor_Time_Of_Last_Scan) > Motor_Scan_Rate) //check if time to scan motors to update speed
-  {
-    motor_Time_Of_Last_Scan = millis();    //yes, reset timer
+
+    rudder_Motor.update_Speed();
+    rudder_Motor.update_Dir();
     //boom
-    //rudder
+    
+    motor_Time_Of_Last_Scan = millis();    //yes, reset timer
   }
 
-  /* check for any changes to end of travel reed switches */
-  if (switch_rudder_Port.switch_Changed())      //check if switch has changed state
+  /* check for any changes to end of travel reed switches
+     if switch closed
+      and chain moving in that direction set flag to inhibit movement and stop the motor
+     if switch released
+      only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot
+  */
+  /* Rudder port switch */
+  if (switch_Rudder_Port.switch_Changed())                  //check if switch has changed state
   {
-    //yes, get new switch state
-    if (switch_rudder_Port.get_Switch_State())  //if switch now closed
+    if (switch_Rudder_Port.get_Switch_State())              //yes, check if switch now closed
     {
-      if (boom_motor.get_Requested_Speed() != 0)              //check if moving. If already stopped, ignore switch change
-      {
-        if (boom_motor.get_Requested_Dir() == REVERSE)        //moving, so check if moving to starboard
-        {
-          boom_motor.set_Requested_Speed(0);               //yes, stop motor. If moving to port, ignore switch change
-        }
-      }
+      switch_Rudder_Port.set_Inhibit_Movement(true);        //yes, set flag to say can't move to port
+      if (rudder_Motor.get_Requested_Speed() != 0 && rudder_Motor.get_Requested_Dir() == TOPORT)  //check if not stopped and moving towards port
+        rudder_Motor.set_Requested_Speed(0);               //Yes, stop the motor
+    }
+    else                                                    //switch now open
+    {
+      if (rudder_Motor.get_Requested_Dir() == TOSTARBOARD && rudder_Motor.get_Requested_Speed() != 0) //check if not stopped and moving towards starboard
+        switch_Rudder_Port.set_Inhibit_Movement(false);    //yes, then clear the flag. Only clears flag if moving to starboard in case of overshoot
     }
   }
-  else                                                      //switch now open
+  /* Rudder starboard switch */
+  if (switch_Rudder_Starboard.switch_Changed())             //check if switch has changed state
   {
-
+    if (switch_Rudder_Starboard.get_Switch_State())         //yes, check if switch now closed
+    {
+      switch_Rudder_Starboard.set_Inhibit_Movement(true);   //yes, set flag to say can't move to starboard
+      if (rudder_Motor.get_Requested_Speed() != 0 && rudder_Motor.get_Requested_Dir() == TOSTARBOARD) //check if not stopped and moving towards starboard
+        rudder_Motor.set_Requested_Speed(0);                //Yes, stop the motor
+    }
+    else                                                  //switch now open
+    {
+      if (rudder_Motor.get_Requested_Dir() == TOPORT && rudder_Motor.get_Requested_Speed() != 0) //check if not stopped and moving towards port
+        switch_Rudder_Starboard.set_Inhibit_Movement(false);  //yes, then clear the flag. Only clears flag if moving to port in case of overshoot
+    }
   }
-
-  if (switch_rudder_Starboard.switch_Changed())
+  /* Boom tight switch */
+  if (switch_Boom_Tight.switch_Changed())
   {
     //yes, do something
   }
-  if (switch_boom_Tight.switch_Changed())
-  {
-    //yes, do something
-  }
-  if (switch_boom_Loose.switch_Changed())
+  /* Boom loose switch */
+  if (switch_Boom_Loose.switch_Changed())
   {
     //yes, do something
   }
 }
 //end of loop()
-
 
 /* end */
 

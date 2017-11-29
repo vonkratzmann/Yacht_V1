@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include "Yacht.h"
 #include "Switch.h"
 
 /* Diagnostics for switch
@@ -19,8 +19,9 @@ Switch::Switch(uint8_t par_pin, unsigned long par_debounce)	//set up so can init
   debounce_Time		  = par_debounce;	//Set up debounce period
   switch_State		  = false;		  //the initial state of the switch
   last_Switch_State	= false;
-  previous_debounced_state = false;
+  previous_Debounced_State = false;
   last_Time_Changed	= millis();   //record time switched state changed
+  inhibit_Movement = false;       //initially allow movement
 }
 
 /* Switch::switch_Changed()
@@ -36,9 +37,9 @@ bool Switch::switch_Changed(void)
     last_Time_Changed = millis();           //record time of change
     last_Switch_State = switch_State;       //yes, update state
   }
-  if ((switch_State != previous_debounced_state) && ((millis() - last_Time_Changed) > debounce_Time))	//changed for longer then debounce period?
+  if ((switch_State != previous_Debounced_State) && ((millis() - last_Time_Changed) > debounce_Time))	//changed for longer then debounce period?
   {
-    previous_debounced_state = switch_State;	      //yes, update state
+    previous_Debounced_State = switch_State;	      //yes, update state
 #ifdef DEBUGSW
     Serial.print("Switch change, state: ");
     Serial.println(switch_State);
@@ -55,9 +56,23 @@ bool Switch::switch_Changed(void)
 /* Switch::get_Switch_State()
    return current debounced state of switch, true closed, false open
 */
-
 bool Switch::get_Switch_State(void)
 {
   return switch_State;
 }
 
+/* Switch::set_Inhibit_Movement(bool)
+   update flag to say if movement is inhibited by the chain the direction this switch
+*/
+void  Switch::set_Inhibit_Movement(bool flag)
+{
+  inhibit_Movement = flag;    //update the flag
+}
+
+/* Switch::get_Inhibit_Movement(void)
+  get flag to say if movement is inhibited by the chain to the direction of this switch
+*/
+bool  Switch::get_Inhibit_Movement(void)
+{
+  return inhibit_Movement; //get flag status
+}
