@@ -7,13 +7,7 @@
 #ifndef Yacht_h
 #define Yacht_h
 
-
-
 #include "arduino.h"
-
-/* Set up speed range for motors */
-#define MINSPEED 0
-#define MAXSPEED 512
 
 /* set up directions for motors */
 
@@ -24,15 +18,19 @@
 #define TIGHTENING	0
 #define LOOSENING 	1
 
+/* Set up speed range for motors */
+const int MINSPEED = 0;
+const int MAXSPEED = 511;
+
 const long Debounce = 100;                    //debounce time for switch in millisecs
 
 /** motors
    define i/o for each motor driver board, each board has 2 inputs: direction & pwm
 */
 const uint8_t  rudder_Dir_Pin	= 8;      //sets direction rudder motor turns
-const uint8_t  rudder_Pwm_Pin	= 9;      //PWM pulse to set the speed of the rudder motor
+const uint8_t  rudder_Pwm_Pin	= 10;      //PWM pulse to set the speed of the rudder motor
 const uint8_t  boom_Dir_Pin		= 7;          //sets the direction the boom motor turns
-const uint8_t  boom_Pwm_Pin		= 6;          //PWM pulse to set the speed of the boom motor
+const uint8_t  boom_Pwm_Pin		= 3;          //PWM pulse to set the speed of the boom motor
 
 /** end of travel detectors
    define i/O for reed switches to detect end of travel for the chain on each motor

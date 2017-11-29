@@ -51,12 +51,8 @@
 #define DEBUGISR1 0
 #define DEBUGISR2 0
 
-/* Set up speed range for motors */
-#define MINSPEED = 0
-#define MAXSPEED = 512
-
-unsigned int interrupt_Counter = 0;           //used in main loop to show the ISR is running
-const unsigned int one_Sec = 1000;            //used in main loop to show the ISR is running, flashes led off and on each second
+int interrupt_Counter = 0;           //used in main loop to show the ISR is running
+const int one_Sec = 1000;            //used in main loop to show the ISR is running, flashes led off and on each second
 
 unsigned long  joys_Time_Of_Last_Scan = 0;    //track when we last scanned for joystick changes
 unsigned long  motor_Time_Of_Last_Scan = 0;   //track when we last updated motor speeds
@@ -168,8 +164,8 @@ void loop(void)
 
     if (js.check_X_Pos())                     //check if x axis of joystick has changed
     { //yes, process the X change
-      unsigned int spd;                            //local variabe to store new speed
-      uint8_t      dir;                            //local variabe to store new direction
+      int spd;                                //local variabe to store new speed
+      uint8_t dir;                            //local variabe to store new direction
       js.process_X(&spd, &dir);               //get new speed and direction
       rudder_Motor.set_Requested_Speed(spd);  //set new speed
       rudder_Motor.set_Requested_Dir(dir);    //set new direction
@@ -177,8 +173,8 @@ void loop(void)
 
     if (js.check_Y_Pos())                     //check if y axis of joystick has changed
     { //yes, process the Y change
-      unsigned int spd;                       //local variabe to store new speed
-      uint8_t      dir;                       //local variabe to store new direction
+      int spd;                                //local variabe to store new speed
+      uint8_t dir;                            //local variabe to store new direction
       js.process_Y(&spd, &dir);               //get new speed and direction
       boom_Motor.set_Requested_Speed(spd);    //set new speed
       boom_Motor.set_Requested_Dir(dir);      //set new direction
@@ -187,7 +183,7 @@ void loop(void)
     rudder_Motor.update_Speed();
     rudder_Motor.update_Dir();
     //boom
-    
+
     motor_Time_Of_Last_Scan = millis();    //yes, reset timer
   }
 

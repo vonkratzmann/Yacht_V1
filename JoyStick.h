@@ -23,29 +23,29 @@ const uint8_t boom_JoystickAnalogPin 	= 0;    //y xis of joystick
    so the chnge of direction will occur when the motor is stopped
 */
 const unsigned long JoyStick_Scan_Rate  = 100;    //scan every 100 ms or 1/10 of a second, (see comments above)
-const unsigned int  JoyStick_Max_ROC    = 26;     //limit rate of change allowable by the joystick (see comments above)
-const unsigned int  noise_Mask          = 0xFFF0; //clear bottom bits to mask any noise on signal
+const int  JoyStick_Max_ROC    = 26;     //limit rate of change allowable by the joystick (see comments above)
+const int  noise_Mask          = 0xFFF0; //clear bottom bits to mask any noise on signal
 
 /* regard joystick in stopped position if equal to or between Joys_Stopped_High & Joys_Stopped_Low
     NOte difference between Sstopped_High and Stopped_low has to be greater than JoyStick_Max_ROC
     see abovecomment
 */
-const unsigned int     Stopped_High = 532;      //setjoystick high range for stopped
-const unsigned int     Stopped_Low  = 491;      //setjoystick low range for stopped
+const int     Stopped_High = 532;      //setjoystick high range for stopped
+const int     Stopped_Low  = 491;      //setjoystick low range for stopped
 
 class JoyStick
 {
   private:
-    unsigned int     x_Cur, y_Cur;            //current position of joystick
-    unsigned int     x_New, y_New;            //new position of joystick
-    unsigned int     diff;
+    int     x_Cur, y_Cur;            //current position of joystick
+    int     x_New, y_New;            //new position of joystick
+    int     diff;
     bool x_Chnged, y_Chnged;                  //flag joy stick position has changed
 
   public:
     JoyStick ();
     bool    check_X_Pos (void);  //check if change in joystick x position
     bool    check_Y_Pos (void);  //check if change in joystick y position
-    void    process_X(unsigned int *spd, uint8_t *dir); // process change for x axis of joystick
-    void    process_Y(unsigned int *spd, uint8_t *dir); // process change for y axis of joystick
+    void    process_X(int *spd, uint8_t *dir); // process change for x axis of joystick
+    void    process_Y(int *spd, uint8_t *dir); // process change for y axis of joystick
 };
 #endif

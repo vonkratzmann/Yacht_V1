@@ -105,7 +105,7 @@ bool JoyStick::check_Y_Pos (void)               //check joystick for any changes
    else checks requested direction and updates direction
    then scales the new speed bewteen the min and max speeds based on joystick position
 */
-void JoyStick::process_X(unsigned int *new_Spd, uint8_t *new_Dir)    //process change for x axis of joystick
+void JoyStick::process_X(int *new_Spd, uint8_t *new_Dir)    //process change for x axis of joystick
 {
   if (x_Cur <= Stopped_High && x_Cur >= Stopped_Low)            //check if in the stopped range
   {
@@ -150,7 +150,7 @@ void JoyStick::process_X(unsigned int *new_Spd, uint8_t *new_Dir)    //process c
    else checks requested direction and updates direction
    then scales the new speed bewteen the min and max speeds based on joystick position
 */
-void JoyStick::process_Y(unsigned int *new_Spd, uint8_t *new_Dir)    //process change for Y axis of joystick
+void JoyStick::process_Y(int *new_Spd, uint8_t *new_Dir)    //process change for Y axis of joystick
 {
   if (y_Cur <= Stopped_High && y_Cur >= Stopped_Low)            //check if in the stopped range
     *new_Spd = 0;                                                    //yes, stopped so update speed to say stopped
