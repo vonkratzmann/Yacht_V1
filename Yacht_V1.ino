@@ -56,7 +56,6 @@ unsigned long  motor_Time_Of_Last_Scan = 0;   //track when we last updated motor
 
 uint8_t led = LOW;                            //state of led, initially off
 
-
 #ifdef DEBUGISR1
 unsigned long entry_Time, exit_Time;        //used to check overhead of ISR
 unsigned long tmp1, tmp2;
@@ -132,7 +131,6 @@ void setup(void)
   TCCR2B |= (1 << CS22);                //sets prescaler for 64
   TIMSK2 |= (1 << OCIE2A);
   sei();                                //enable interrupts
-
   return;
 }  //  end of setup()
 
@@ -159,8 +157,50 @@ void loop(void)
       int spd;                                //local variabe to store new speed
       uint8_t dir;                            //local variabe to store new direction
       js.process_X(&spd, &dir);               //get new speed and direction
-      rudder_Motor.set_Requested_Speed(spd);  //set new speed
-      rudder_Motor.set_Requested_Dir(dir);    //set new direction
+
+      /* check if moving towards starboard and have hit limit switch for movement to starboard */
+      if (spd != 0 && dir == TOSTARBOARD && switch_Rudder_Starboard.get_Inhibit_Movement_Flag())
+      {
+        spd = 0;                                 //yes, stop the motor
+      }
+
+      /* check if moving towards port and have hit limit switch for movement to port */
+      if (spd != 0 && dir == TOPORT && switch_Rudder_Port.get_Inhibit_Movement_Flag())
+      {
+        spd = 0;                                //yes, stop the motor
+      }
+
+      rudder_Motor.set_Requested_Speed(spd);    //set new speed
+      rudder_Motor.set_Requested_Dir(dir);      //set new direction
+
+      /* check if moving towards port then clear the inhibt movement flag for starboard,
+        use the actual speed rather than required speed to ensure motor is moving */
+      if (rudder_Motor.get_Current_Speed() != 0 && rudder_Motor.get_Current_Dir() == TOPORT && switch_Rudder_Starboard.get_Inhibit_Movement_Flag())
+      {
+        switch_Rudder_Starboard.set_Inhibit_Movement_Flag(false);
+      }
+
+      /* check if moving towards starboard then clear the inhibt movement flag for port,
+        use the actual speed rather than required speed to ensure motor is moving */
+
+      DEBUG_FILE("Function: ");
+      DEBUG_FILE(__FILE__);
+      DEBUG_FILE(",");
+      DEBUG_PRINT(__FUNCTION__);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINT("rudder_Motor.get_Current_Speed(): ");
+      DEBUG_PRINT(rudder_Motor.get_Current_Speed());
+      DEBUG_PRINT(" ");
+      DEBUG_PRINT("rudder_Motor.get_Current_Dir(): ");
+      DEBUG_PRINT(rudder_Motor.get_Current_Dir());
+      DEBUG_PRINT(" ");
+      DEBUG_PRINT("switch_Rudder_Port.get_Inhibit_Movement_Flag(): ");
+      DEBUG_PRINTLN(switch_Rudder_Port.get_Inhibit_Movement_Flag());
+      
+      if (rudder_Motor.get_Current_Speed() != 0 && rudder_Motor.get_Current_Dir() == TOSTARBOARD && switch_Rudder_Port.get_Inhibit_Movement_Flag())
+      {
+        switch_Rudder_Port.set_Inhibit_Movement_Flag(false);
+      }
     }
 
     if (js.check_Y_Axis())                     //check if y axis of joystick has changed
@@ -168,13 +208,14 @@ void loop(void)
       int spd;                                //local variabe to store new speed
       uint8_t dir;                            //local variabe to store new direction
       js.process_Y(&spd, &dir);               //get new speed and direction
+
       boom_Motor.set_Requested_Speed(spd);    //set new speed
       boom_Motor.set_Requested_Dir(dir);      //set new direction
     }
 
     rudder_Motor.update_Speed();              //update rudder motor speed from the requested speed
     rudder_Motor.update_Dir();                //update rudder motor direction from the requested direction
-  
+
     boom_Motor.update_Speed();                //update boom motor speed from the requested speed
     boom_Motor.update_Dir();                  //update boom motor direction from the requested direction
 
@@ -188,33 +229,33 @@ void loop(void)
       only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot
   */
   /* Rudder port switch */
-  if (switch_Rudder_Port.switch_Changed())                  //check if switch has changed state
+  if (switch_Rudder_Port.switch_Changed())                       //check if switch has changed state
   {
-    if (switch_Rudder_Port.get_Switch_State())              //yes, check if switch now closed
+    if (switch_Rudder_Port.get_Switch_State())                   //yes, check if switch now closed
     {
-      switch_Rudder_Port.set_Inhibit_Movement(true);        //yes, set flag to say can't move to port
+      switch_Rudder_Port.set_Inhibit_Movement_Flag(true);        //yes, set flag to say can't move to port
       if (rudder_Motor.get_Requested_Speed() != 0 && rudder_Motor.get_Requested_Dir() == TOPORT)  //check if not stopped and moving towards port
-        rudder_Motor.set_Requested_Speed(0);               //Yes, stop the motor
+        rudder_Motor.set_Requested_Speed(0);                     //Yes, stop the motor
     }
-    else                                                    //switch now open
+    else                                                          //switch now open
     {
       if (rudder_Motor.get_Requested_Dir() == TOSTARBOARD && rudder_Motor.get_Requested_Speed() != 0) //check if not stopped and moving towards starboard
-        switch_Rudder_Port.set_Inhibit_Movement(false);    //yes, then clear the flag. Only clears flag if moving to starboard in case of overshoot
+        switch_Rudder_Port.set_Inhibit_Movement_Flag(false);      //yes, then clear the flag. Only clears flag if moving to starboard in case of overshoot
     }
   }
   /* Rudder starboard switch */
-  if (switch_Rudder_Starboard.switch_Changed())             //check if switch has changed state
+  if (switch_Rudder_Starboard.switch_Changed())                   //check if switch has changed state
   {
-    if (switch_Rudder_Starboard.get_Switch_State())         //yes, check if switch now closed
+    if (switch_Rudder_Starboard.get_Switch_State())               //yes, check if switch now closed
     {
-      switch_Rudder_Starboard.set_Inhibit_Movement(true);   //yes, set flag to say can't move to starboard
+      switch_Rudder_Starboard.set_Inhibit_Movement_Flag(true);    //yes, set flag to say can't move to starboard
       if (rudder_Motor.get_Requested_Speed() != 0 && rudder_Motor.get_Requested_Dir() == TOSTARBOARD) //check if not stopped and moving towards starboard
-        rudder_Motor.set_Requested_Speed(0);                //Yes, stop the motor
+        rudder_Motor.set_Requested_Speed(0);                      //Yes, stop the motor
     }
-    else                                                  //switch now open
+    else                                                          //switch now open
     {
       if (rudder_Motor.get_Requested_Dir() == TOPORT && rudder_Motor.get_Requested_Speed() != 0) //check if not stopped and moving towards port
-        switch_Rudder_Starboard.set_Inhibit_Movement(false);  //yes, then clear the flag. Only clears flag if moving to port in case of overshoot
+        switch_Rudder_Starboard.set_Inhibit_Movement_Flag(false); //yes, then clear the flag. Only clears flag if moving to port in case of overshoot
     }
   }
   /* Boom tight switch */

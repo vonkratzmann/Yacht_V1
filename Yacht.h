@@ -7,15 +7,19 @@
 
 /* define to run diagnostics which print to the serial monitor
   comment out once code is finished
-*/
-#define   DEBUG
 
-#ifdef    DEBUG
+  #define  DEBUG_FILE(x)     Serial.print(x)
+*/
+#define  DEBUG
+
+#ifdef   DEBUG
 #define  DEBUG_PRINT(x)    Serial.print(x)
 #define  DEBUG_PRINTLN(x)  Serial.println(x)
+#define  DEBUG_FILE(x)     
 #else
 #define  DEBUG_PRINT(x)
 #define  DEBUG_PRINTLN(x)
+#define  DEBUG_FILE(x)     
 #endif
 
 /* define to run joystick diagnostics which force a value from the joystick
@@ -36,8 +40,8 @@
 #define REVERSE   0
 #define TOPORT    1
 #define TOSTARBOARD 0
-#define TIGHTENING  0
-#define LOOSENING   1
+#define TIGHTENING  1
+#define LOOSENING   0
 
 /* Set up speed range for motors */
 const int MINSPEED = 0;

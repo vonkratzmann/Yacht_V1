@@ -20,10 +20,10 @@ class Switch
 
   public:
     Switch(uint8_t, unsigned long);
-    bool	switch_Changed(void);       //check if switch has changed
-    bool	get_Switch_State(void);     //get the dedounced state of the switch
-    void  set_Inhibit_Movement(bool); //update flag
-    bool  get_Inhibit_Movement(void); //get flag status
+    bool	switch_Changed(void);             //check if switch has changed
+    bool	get_Switch_State(void);           //get the dedounced state of the switch
+    void  set_Inhibit_Movement_Flag(bool);  //update flag
+    bool  get_Inhibit_Movement_Flag(void);  //get flag status
 };
 
 #endif

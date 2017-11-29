@@ -40,10 +40,15 @@ bool Switch::switch_Changed(void)
   if ((switch_State != previous_Debounced_State) && ((millis() - last_Time_Changed) > debounce_Time))	//changed for longer then debounce period?
   {
     previous_Debounced_State = switch_State;	      //yes, update state
-#ifdef DEBUGSW
-    DEBUG_PRINT("Switch change, state: ");
+
+    DEBUG_FILE("Function: ");
+    DEBUG_FILE(__FILE__);
+    DEBUG_FILE(",");
+    DEBUG_PRINT(__FUNCTION__);
+    DEBUG_PRINT(" ");
+    DEBUG_PRINT("switch_State: ");
     DEBUG_PRINTLN(switch_State);
-#endif
+
     last_Time_Changed = millis();			  //reset timer, ready for the next change in switch postion
     return true;							          //tell them there was a change in the switch
   }
@@ -64,15 +69,23 @@ bool Switch::get_Switch_State(void)
 /* Switch::set_Inhibit_Movement(bool)
    update flag to say if movement is inhibited by the chain the direction this switch
 */
-void  Switch::set_Inhibit_Movement(bool flag)
+void  Switch::set_Inhibit_Movement_Flag(bool flag)
 {
   inhibit_Movement = flag;    //update the flag
+
+  DEBUG_FILE("Function: ");
+  DEBUG_FILE(__FILE__);
+  DEBUG_FILE(",");
+  DEBUG_PRINT(__FUNCTION__);
+  DEBUG_PRINT(" ");
+  DEBUG_PRINT("inhibit_Movement: ");
+  DEBUG_PRINTLN(inhibit_Movement);
 }
 
 /* Switch::get_Inhibit_Movement(void)
   get flag to say if movement is inhibited by the chain to the direction of this switch
 */
-bool  Switch::get_Inhibit_Movement(void)
+bool  Switch::get_Inhibit_Movement_Flag(void)
 {
   return inhibit_Movement; //get flag status
 }
