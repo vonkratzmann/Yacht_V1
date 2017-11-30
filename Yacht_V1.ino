@@ -68,8 +68,8 @@ Switch switch_Boom_Tight(boom_Tight_EndofTravel_Pin, Debounce);
 Switch switch_Boom_Loose(boom_Loose_EndofTravel_Pin, Debounce);
 
 /* define motors */
-Motor rudder_Motor(rudder_Pwm_Pin, rudder_Dir_Pin);
-Motor boom_Motor(boom_Pwm_Pin, boom_Dir_Pin);
+Motor rudder_Motor(rudder_Pwm_Reg, rudder_Dir_Pin);
+Motor boom_Motor(boom_Pwm_Reg, boom_Dir_Pin);
 
 /* Interrupt Service Routine for timer 2
   to be used for motor
@@ -135,20 +135,11 @@ void setup(void)
     setting the waveform generation mode bits WGM to 011 selects fast PWM
   */
   TCCR2A = _BV(COM2A1) | _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
-  /*
-    On TCCR2B, setting the CS bits to 011 sets the prescaler to divide the clock by 32
-  */
+  /* On TCCR2B, setting the CS bits to 011 sets the prescaler to divide the clock by 32 */
   TCCR2B  = _BV(CS21) | _BV(CS20);
-
- //     int *rudder_Pwm_Reg;
- //     rudder_Pwm_Reg = 0xB3;
-      //   * ((int*)rudder_Pwm_Reg) = 64;
-    //  OCR2B = 128;                             //0xB4 pin 3
-
-  /*
-    On TIMSK2, setting the TOIE2 bits to 1 enables the Timer/Counter2 Overflow interrupt.
-  */
+  /* On TIMSK2, setting the TOIE2 bits to 1 enables the Timer/Counter2 Overflow interrupt. */
   TIMSK2 = _BV(TOIE2);
+
   sei();                                      //enable interrupts  */
   return;
 }  //  end of setup()
