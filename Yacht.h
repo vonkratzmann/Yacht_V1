@@ -85,7 +85,7 @@
 /* define to run switch diagnostics which print to the serial monitor
   comment out before code is released
 */
-#define  SWITCH_DEBUG
+//#define  SWITCH_DEBUG
 
 #ifdef   SWITCH_DEBUG
 #define  SWITCH_DEBUG_PRINT(x)    Serial.print(x)

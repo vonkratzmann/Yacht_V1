@@ -1,9 +1,7 @@
 /** Drives a yacht controller for Brad Connelly
    Author:    Kirk Kratzmann
    Version:   1.0
-   Date:      26/11/2017
-
-   History:
+   Date:      01/12/2017
 */
 
 /** System Summary
@@ -51,11 +49,6 @@ unsigned long  motor_Time_Of_Last_Scan = 0;   //track when we last updated motor
 
 uint8_t led = LOW;                            //state of led, initially off
 
-#ifdef DEBUGISR1
-unsigned long entry_Time, exit_Time;        //used to check overhead of ISR
-unsigned long tmp1, tmp2;
-#endif
-
 /* define objects */
 
 /* define joystick */
@@ -71,17 +64,8 @@ Switch switch_Boom_Loose(boom_Loose_EndofTravel_Pin, Debounce);
 Motor rudder_Motor(rudder_Pwm_Reg, rudder_Dir_Pin);
 Motor boom_Motor(boom_Pwm_Reg, boom_Dir_Pin);
 
-/* Interrupt Service Routine for timer 2
-  to be used for motor
-*/
-
-//ISR(TIMER2_COMPA_vect)
-//{
-//  ISR_DEBUG_ENTRY                                   //Diagnostics
-//  interrupt_Counter = interrupt_Counter + 1;        //used to show we are alive and ISR running
-//  ISR_DEBUG_EXIT                                    //Diagnostics
-//  return;
-//}  //end of ISR
+/* Interrupt Service Routine for timer 2 to be used for motor
+  interrupts when counter overflows in timer 2 */
 
 ISR(TIMER2_OVF_vect)
 {
@@ -89,12 +73,9 @@ ISR(TIMER2_OVF_vect)
   interrupt_Counter = interrupt_Counter + 1;        //used to show we are alive and ISR running
   ISR_DEBUG_EXIT                                    //Diagnostics
   return;
-}  //end of ISR
+}
 
-
-/** Setup
-
-*/
+/** Setup */
 void setup(void)
 {
   /* set up inputs using internal pull up resistors and set up outputs */
