@@ -26,21 +26,16 @@
 
    The program reads the joystick at a preddefined rate
    then converts these readings into a Pulse width Modulated output and direction to drive the rudder and boom motors direction and speed
-   on joystick x is the rudder, y is the boom
+   On the joystick x is the rudder, y is the boom
 
-   Normal operation the diagnostic led fashes on and off every second
+   Uses counter 2 and interrupts to generate fast mode pwm pulses, freq is approximatelly 2kHz
+   Normal operation the diagnostic led fashes on and off every second via the ISR
 
-   h/w diagnostics are started if PCM 1 input is grounded
-   the diagnostics can be run and stopped at any time while the program is running
-   while running diagnostics all normal motor operation stops
-*/
-
-/* ISR */
-//uses counter 2 to generate pwm pulses freq is 2kHz
-
-/** I/O
-   all inputs have internal pullups enabled
+   All inputs have internal pullups enabled
    so switches are 0 when pressed, and a 1 when released
+
+   There are a number of simple diagnostics which can be enable by the #DEFINEs in Yacht.h
+
 */
 
 #include "Yacht.h"
@@ -76,25 +71,26 @@ Switch switch_Boom_Loose(boom_Loose_EndofTravel_Pin, Debounce);
 Motor rudder_Motor(rudder_Pwm_Pin, rudder_Dir_Pin);
 Motor boom_Motor(boom_Pwm_Pin, boom_Dir_Pin);
 
-
 /* Interrupt Service Routine for timer 2
   to be used for motor
 */
 
-ISR(TIMER2_COMPA_vect)
-{
-#ifdef DEBUGISR1
-  //attempt to check the overhead of the ISR, by recording times of entry into two consecutive ISR calls,
-  //then main loop can then print these out
-  entry_Time = micros();
-#endif
+//ISR(TIMER2_COMPA_vect)
+//{
+//  ISR_DEBUG_ENTRY                                   //Diagnostics
+//  interrupt_Counter = interrupt_Counter + 1;        //used to show we are alive and ISR running
+//  ISR_DEBUG_EXIT                                    //Diagnostics
+//  return;
+//}  //end of ISR
 
-  interrupt_Counter = interrupt_Counter + 1;        // used to show we are alive and ISR running
-#ifdef DEBUGISR1
-  exit_Time = micros();
-#endif
+ISR(TIMER2_OVF_vect)
+{
+  ISR_DEBUG_ENTRY                                   //Diagnostics
+  interrupt_Counter = interrupt_Counter + 1;        //used to show we are alive and ISR running
+  ISR_DEBUG_EXIT                                    //Diagnostics
   return;
 }  //end of ISR
+
 
 /** Setup
 
@@ -105,32 +101,55 @@ void setup(void)
   pinMode(LedPin,          OUTPUT);
   digitalWrite(LedPin,       HIGH);     // sets the LED on
 
-  /* Diagnostics for startup
-     If set to 1 prints out startup maessage
-     Normally set to zero
-  */
   Serial.begin(9600);                   //set up serial port for any debug prints
 
   DEBUG_PRINTLN("Started");
 
   /* Set up timer interrupt */
 
-  /* Timer 0, is 8 bits used by fuction millis();  Timer 1, 3, 4, 5 are 16 bits;  Timer 0, 2 are 8 bits
-    timers used by anolgue write
+  /* Timer 0, is 8 bits used by fuction millis();
+     Timer 2, is 8 bits and is used to generate an interrupt approximately every 500 microseconds and to process pwm pulses to motors
+    for timer is 16x10^6 (clock speed) / [prescaler x 255];  for prescaler of 32, frequeny of interrupts and PWM is 1.960kHz
+    Use fast PWM mode, where the timer repeatedly counts from 0 to 255. The output turns on when the timer is at 0, and turns off when the timer matches the output compare register.
+    The higher the value in the output compare register, the higher the duty cycle.
 
-    Use Timer 2 to generate an interrupt every 500 microseconds to process pwm pulses to motors
-    for timer is 16x10^6 (clock speed) / [prescaler x freq] -1
-    for 1kHz, prescaler = 64, cont = 124  */
+    // ----- TIMER 2 -----
+    // TCCR2A - Timer/Counter control register A
+    // Bit  |    7     |    6     |    5     |    4     |  3  |  2  |    1    |    0    |
+    //      |  COM2A1  |  COM2A0  |  COM2B1  |  COM2B0  |  -  |  -  |  WGM21  |  WGM20  |
 
-  cli();                                 //stop interrupts
-  TCCR2A = 0;
-  TCCR2B = 0;
-  TCNT2  = 0;
-  OCR2A = 124;                          //set compare register
-  TCCR2A |= (1 << WGM21);               //turn on CTC mode
-  TCCR2B |= (1 << CS22);                //sets prescaler for 64
-  TIMSK2 |= (1 << OCIE2A);
-  sei();                                //enable interrupts
+    // TCCR2B - Timer/Counter control register B
+    // Bit  |    7     |    6     |    5     |    4     |    3    |    2    |    1   |    0   |
+    //      |  FOC2A   |  FOC2B   |    -     |    -     |  WGM22  |  CS22   |  CS21  |  CS20  |
+
+    //TIMSK2 – Timer/Counter2 Interrupt Mask Register
+    // Bit  |    7     |    6     |    5     |    4     |     3   |  2       |    1     |    0    |
+    //      |    -     |    -     |    -     |    -     |    -    | OCIE2B   |  OCIE2A  |  TOIE2  |
+  */
+  cli();                                      //stop interrupts
+  pinMode(11, OUTPUT);                        //set PWM pin as an output. On Micro - pin OC2A, PB3, on UNO pin 11
+  pinMode(3, OUTPUT);                         //set PWM pin as an output. On Micro - pin OC2B, PD3, on UNO pin  3
+  /*
+    On TCCR2A, setting the COM2A bits and COM2B bits to 10 provides non-inverted PWM for outputs A and B,
+    Clears OC2A & OC2B on Compare Match, set OC2A & OC2B at BOTTOM,
+    setting the waveform generation mode bits WGM to 011 selects fast PWM
+  */
+  TCCR2A = _BV(COM2A1) | _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
+  /*
+    On TCCR2B, setting the CS bits to 011 sets the prescaler to divide the clock by 32
+  */
+  TCCR2B  = _BV(CS21) | _BV(CS20);
+
+ //     int *rudder_Pwm_Reg;
+ //     rudder_Pwm_Reg = 0xB3;
+      //   * ((int*)rudder_Pwm_Reg) = 64;
+    //  OCR2B = 128;                             //0xB4 pin 3
+
+  /*
+    On TIMSK2, setting the TOIE2 bits to 1 enables the Timer/Counter2 Overflow interrupt.
+  */
+  TIMSK2 = _BV(TOIE2);
+  sei();                                      //enable interrupts  */
   return;
 }  //  end of setup()
 
