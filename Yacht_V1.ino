@@ -33,7 +33,6 @@
    so switches are 0 when pressed, and a 1 when released
 
    There are a number of simple diagnostics which can be enable by the #DEFINEs in Yacht.h
-
 */
 
 /** Software Structure Overview
@@ -48,25 +47,32 @@
     Switch.h:      Switch class decelerations
 
     The main loop logic for the x axis is:
-      check if time to flash the onboard led on or off, used to show program and isr are running
-	  if time to read the joystick again, then
-	    calls "check_X_Axis()" to check for a change in the x axis of the joystick current reading compared to the last read
-	    if there is a change, calls "process_X()" which returns an updated speed and direction via call by reference paramaters.
-	      Then with the new speed and direction,
-	        checks if moving towards starboard and movement to starboard is inhibited, if yes then stops the motor
-            checks if moving towards port and movement to port is inhibited, if yes then stops the motor
-		    calls "rudder_Motor.set_Requested_Speed(spd)"  to set new speed
-            calls "rudder_Motor.set_Requested_Dir()" to set new direction
+    check if time to flash the onboard led on or off, used to show program and isr are running and aid with setting up the reed switches
+      if time to read the joystick, then
+      calls "check_X_Axis()" to check for a change in the x axis of the joystick current reading compared to the last read
+      if there is a change, calls "process_X()" which returns an updated speed and direction via call by reference paramaters.
+      Then with the new speed and direction,
+      checks if moving towards starboard and movement to starboard is inhibited, if yes then stops the motor
+      checks if moving towards port and movement to port is inhibited, if yes then stops the motor
+      calls "rudder_Motor.set_Requested_Speed(spd)"  to set new speed
+      calls "rudder_Motor.set_Requested_Dir()" to set new direction
 
-		    Then checks if moving towards starboard and moved off the limit switch, then clear the inhibit movement flag for port,
-            Then checks if moving towards port and moved off the limit switch, then clear the inhibit movement flag for starboard,
-
-	   Repeats for the y axis.
-	   Then calls:
-	    "rudder_Motor.update_Speed() to update rudder motor speed from the requested speed
-		"rudder_Motor.update_Dir()" to update rudder motor direction from the requested direction
-		"boom_Motor.update_Speed()" to update boom motor speed from the requested speed
-		"boom_Motor.update_Dir()" to update boom motor direction from the requested direction
+      Then checks if moving towards starboard and moved off the limit switch, then clear the inhibit movement flag for port,
+      Then checks if moving towards port and moved off the limit switch, then clear the inhibit movement flag for starboard,
+      Repeats for the y axis.
+      Then calls:
+      "rudder_Motor.update_Speed() to update rudder motor speed from the requested speed
+      "rudder_Motor.update_Dir()" to update rudder motor direction from the requested direction
+      "boom_Motor.update_Speed()" to update boom motor speed from the requested speed
+      "boom_Motor.update_Dir()" to update boom motor direction from the requested direction
+      
+    then check for and process any changes to the end of travel reed switches by calling:
+      "check_Rudder_Starboard_Switch()"
+      "check_Rudder_Port_Switch()"
+      "check_Boom_Tight_Switch()"
+      "check_Boom_Loose_Switch()" 
+      for each of these if switch has closed and chain moving in that direction set flag to inhibit movement and stop the motor
+        if switch released only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot.
  */
 
 #include "Yacht.h"
@@ -75,11 +81,13 @@
 #include "Switch.h"
 #include "Motor.h"
 
-int interrupt_Counter = 0;           //used in main loop to show the ISR is running
+int interrupt_Counter = 0;                    //used in main loop to show the ISR is running
 
 unsigned long  joys_Time_Of_Last_Scan = 0;    //track when we last scanned for joystick changes
 
 uint8_t led = LOW;                            //state of led, initially off
+boolean reedSwitchFlashFlag = false;          //flags to track if flashing led for a change of state of a reed switch
+boolean reedChangeFlag = false;
 
 /* define objects */
 
@@ -160,7 +168,8 @@ void setup(void)
 
 */
 void loop(void)
-{ if (interrupt_Counter >= one_Sec )          //check if one second has expired
+{
+  if (interrupt_Counter >= Qtr_Sec )          //check if quarter of a second has expired
     flash_Led();
   /* check for any joystick movement and update motor speeds */
   if ((millis() - joys_Time_Of_Last_Scan) > JoyStick_Scan_Rate) //check if time to scan joystick for changes to x and Y axis
@@ -208,7 +217,8 @@ void loop(void)
     boom_Motor.update_Speed();                //update boom motor speed from the requested speed
     boom_Motor.update_Dir();                  //update boom motor direction from the requested direction
   }
-  /* Check for and process any changes to the end of travel reed switches,   */
+  /* Check for and process any changes to the end of travel reed switches,
+    done each time around the main loop  */
   check_Rudder_Starboard_Switch();
   check_Rudder_Port_Switch();
   check_Boom_Tight_Switch();
@@ -225,12 +235,13 @@ void loop(void)
    chain has reached limit and inhibit flag is set, chain could be stopped and chain bounces,
    reed switch opens and if it remains open the inhbit flag is not cleared because the chain is not moving.
 
-   function checks if moving towards starboard and moved off the limit switch, then clear the inhibit movement flag for port,
-   use the actual speed rather than required speed to ensure motor is moving.
    Only reason code is in seperate function is to make the main loop easier to read.
 */
 void check_Moved_Off_Rudder_Switches(void)
 {
+  /* check if moving towards starboard and moved off the limit switch, then clear the inhibit movement flag for port,
+    use the actual speed rather than required speed to ensure motor is moving. */
+
   if (rudder_Motor.get_Current_Speed() != 0 && rudder_Motor.get_Current_Dir() == TOSTARBOARD &&
       switch_Rudder_Port.get_Inhibit_Movement_Flag() && !switch_Rudder_Port.get_Switch_State())
   {
@@ -239,6 +250,7 @@ void check_Moved_Off_Rudder_Switches(void)
 
   /* check if moving towards port and moved off the limit switch, then clear the inhibit movement flag for starboard,
      use the actual speed rather than required speed to ensure motor is moving */
+
   if (rudder_Motor.get_Current_Speed() != 0 && rudder_Motor.get_Current_Dir() == TOPORT &&
       switch_Rudder_Starboard.get_Inhibit_Movement_Flag() && !switch_Rudder_Starboard.get_Switch_State())
   {
@@ -248,12 +260,19 @@ void check_Moved_Off_Rudder_Switches(void)
 //-------------------------------------
 
 /* check_Moved_Off_Boom_Switches()
-   function checks if boom tightening and moved off the loose limit switch, then clear the inhibit movement flag for the boom loose limit switch,
-   use the actual speed rather than required speed to ensure motor is moving
+   Similiar test when change in reed switch is detected, but because chain bounces,
+   can get situation where the logic in change in reed switch does not clear the
+   inhibit flag in the "check_xxx_xxx_Switch" function, eg
+   chain has reached limit and inhibit flag is set, chain could be stopped and chain bounces,
+   reed switch opens and if it remains open the inhbit flag is not cleared because the chain is not moving.
+
    Only reason code is in seperate function is to make the main loop easier to read.
 */
 void check_Moved_Off_Boom_Switches(void)
 {
+  /* check if boom tightening and moved off the loose limit switch, then clear the inhibit movement flag for the boom loose limit switch,
+   use the actual speed rather than required speed to ensure motor is moving */
+
   if (boom_Motor.get_Current_Speed() != 0 && boom_Motor.get_Current_Dir() == TIGHTENING &&
       switch_Boom_Loose.get_Inhibit_Movement_Flag() && !switch_Boom_Loose.get_Switch_State())
   {
@@ -280,7 +299,8 @@ void check_Rudder_Starboard_Switch(void)
 {
   if (switch_Rudder_Starboard.switch_Changed())                   //check if switch has changed state
   {
-    if (switch_Rudder_Starboard.get_Switch_State())               //yes, check if switch now closed
+    reedSwitchFlashFlag = true;                                   //yes, flash diag led
+    if (switch_Rudder_Starboard.get_Switch_State())               //check if switch now closed
     {
       switch_Rudder_Starboard.set_Inhibit_Movement_Flag(true);    //yes, set flag to say can't move to starboard
       if (rudder_Motor.get_Requested_Speed() != 0 && rudder_Motor.get_Requested_Dir() == TOSTARBOARD) //check if not stopped and moving towards starboard
@@ -304,13 +324,14 @@ void check_Rudder_Port_Switch(void)
 {
   if (switch_Rudder_Port.switch_Changed())                       //check if switch has changed state
   {
-    if (switch_Rudder_Port.get_Switch_State())                   //yes, check if switch now closed
+    reedSwitchFlashFlag = true;                                  //yes, flash diag led
+    if (switch_Rudder_Port.get_Switch_State())                   //check if switch now closed
     {
       switch_Rudder_Port.set_Inhibit_Movement_Flag(true);        //yes, set flag to say can't move to port
       if (rudder_Motor.get_Requested_Speed() != 0 && rudder_Motor.get_Requested_Dir() == TOPORT)  //check if not stopped and moving towards port
         rudder_Motor.set_Requested_Speed(0);                     //Yes, stop the motor
     }
-    else                                                          //switch now open
+    else                                                         //switch now open
     {
       if (rudder_Motor.get_Requested_Dir() == TOSTARBOARD && rudder_Motor.get_Requested_Speed() != 0) //check if not stopped and moving towards starboard
         switch_Rudder_Port.set_Inhibit_Movement_Flag(false);      //yes, then clear the flag. Only clears flag if moving to starboard in case of overshoot
@@ -328,7 +349,8 @@ void check_Boom_Loose_Switch(void)
 {
   if (switch_Boom_Loose.switch_Changed())                         //check if switch has changed state
   {
-    if (switch_Boom_Loose.get_Switch_State())                     //yes, check if switch now closed
+    reedSwitchFlashFlag = true;                                   //yes, flash diag led
+    if (switch_Boom_Loose.get_Switch_State())                     //check if switch now closed
     {
       switch_Boom_Loose.set_Inhibit_Movement_Flag(true);          //yes, set flag to say can't loosen the boom
       if (boom_Motor.get_Requested_Speed() != 0 && boom_Motor.get_Requested_Dir() == LOOSENING)  //check if not stopped and the boom loosening
@@ -350,9 +372,11 @@ void check_Boom_Loose_Switch(void)
 */
 void check_Boom_Tight_Switch(void)
 {
+
   if (switch_Boom_Tight.switch_Changed())                         //check if switch has changed state
   {
-    if (switch_Boom_Tight.get_Switch_State())                     //yes, check if switch now closed
+    reedSwitchFlashFlag = true;                                   //yes, flash diag led
+    if (switch_Boom_Tight.get_Switch_State())                     //check if switch now closed
     {
       switch_Boom_Tight.set_Inhibit_Movement_Flag(true);          //yes, set flag to say can't tighten the boom
       if (boom_Motor.get_Requested_Speed() != 0 && boom_Motor.get_Requested_Dir() == TIGHTENING)  //check if not stopped and the boom tightening
@@ -368,17 +392,43 @@ void check_Boom_Tight_Switch(void)
 //-------------------------------------
 
 /* Flash Led
-   Only reason code is in seperate function is to make the main loop easier to read.
+  flash led for a quarter of a second if a reed switch changes state to aid with setup and testing
+  otherwise flash led on and off for a second to show program is running
 */
 void flash_Led(void)
 {
-  digitalWrite(LedPin, led);                 // continually turn led on and off every second - shows we alive & interrupts working
-  led ? led = LOW : led = HIGH;              // swap led state from high to low or low to high
+  if (reedSwitchFlashFlag)
+  {
+    reedSwitchFlashFlag = false;               //clear the flag
+    toggle_led();
+    reedChangeFlag = true;                     //set the flag to say displaying led for reed switch change
+    reset_Counter();
+  }
+  else if (reedChangeFlag && interrupt_Counter > Qtr_Sec) //has led been on for a quarter of a second?
+  {
+    toggle_led();
+    reedChangeFlag = false;                     //clear the flag to say displaying led for reed switch change
+    reset_Counter();
+  }
+  else if (interrupt_Counter > One_Sec)
+  {
+    toggle_led();
+    reset_Counter();
+  }
+}
+
+void toggle_led(void)
+{
+  led ? led = LOW : led = HIGH;              //swap led state from high to low or low to high
+  digitalWrite(LedPin, led);                 //update the led
+}
+
+void reset_Counter(void)
+{
   cli();                                     //interrupts off
   interrupt_Counter = 0;                     //reset counter
   sei();                                     //interrupts on
 }
-
 
 /* end Yacht_V1 */
 

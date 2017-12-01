@@ -106,12 +106,16 @@
 #define LOOSENING   1
 #define TIGHTENING  0
 
-const int one_Sec = 1960;            //used in main loop to show the ISR is running, flip flops led off and on each second
+const int One_Sec = 1960;            //used in main loop to show the ISR is running, flip flops led off and on each second
+const int Qtr_Sec =  490;            //used in main loop to flash led show for a quarter of a second
 
-
-/* Set up speed range for motors */
+/* Set up speed range for joystick */
 const int MINSPEED = 0;
 const int MAXSPEED = 511;                     //as joystick reads 0 to 1023
+
+/* Set up speed range for motor*/
+const int MOTOR_MINSPEED = 0;
+const int MOTOR_MAXSPEED = 511;               //may not want to let the motor get to maximum speed
 
 const long Debounce = 100;                    //debounce time for switch in millisecs
 
