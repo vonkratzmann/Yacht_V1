@@ -69,7 +69,7 @@
 /* define to run motor diagnostics which print to the serial monitor
   comment out before code is released
 */
-//#define  MOTOR_DEBUG
+#define  MOTOR_DEBUG
  
 #ifdef   MOTOR_DEBUG
 #define  MOTOR_DEBUG_PRINT(x)    Serial.print(x)
@@ -85,7 +85,7 @@
 /* define to run switch diagnostics which print to the serial monitor
   comment out before code is released
 */
-//#define  SWITCH_DEBUG
+#define  SWITCH_DEBUG
 
 #ifdef   SWITCH_DEBUG
 #define  SWITCH_DEBUG_PRINT(x)    Serial.print(x)
@@ -106,6 +106,8 @@
 #define LOOSENING   1
 #define TIGHTENING  0
 
+const int one_Sec = 1960;            //used in main loop to show the ISR is running, flip flops led off and on each second
+
 
 /* Set up speed range for motors */
 const int MINSPEED = 0;
@@ -113,23 +115,27 @@ const int MAXSPEED = 511;                     //as joystick reads 0 to 1023
 
 const long Debounce = 100;                    //debounce time for switch in millisecs
 
+/* ADC I/O for Joystick*/
+const uint8_t rudder_JoystickAnalogPin 		= 1;    //x axis of joystick
+const uint8_t boom_JoystickAnalogPin 	        = 0;    //y xis of joystick
+
 /** motors
    define i/o for each motor driver board, each board has 2 inputs: direction & pwm
 */
 const uint8_t  rudder_Dir_Pin	  = 8;          //sets direction rudder motor turns
 const uint8_t  rudder_Pwm_Pin	  = 11;         //PWM pulse to set the speed of the rudder motor, this is ATmega PB3 OC2A, UNO pin 11
-const int      rudder_Pwm_Reg   = 0xB3;       //Atmega register to set the duty cycle of the PWM, write 0 to 255
+const int      rudder_Pwm_Reg     = 0xB3;       //Atmega register to set the duty cycle of the PWM, write 0 to 255
               
-const uint8_t  boom_Dir_Pin		  = 7;          //sets the direction the boom motor turns
-const uint8_t  boom_Pwm_Pin		  = 3;          //PWM pulse to set the speed of the boom motor, this is ATmega PD3 OC2B, UNO pin 3
-const int      boom_Pwm_Reg     =0xB4;        //Atmega register to set the duty cycle of the PWM, write 0 to 255
+const uint8_t  boom_Dir_Pin       = 7;          //sets the direction the boom motor turns
+const uint8_t  boom_Pwm_Pin	  = 3;          //PWM pulse to set the speed of the boom motor, this is ATmega PD3 OC2B, UNO pin 3
+const int      boom_Pwm_Reg       =0xB4;        //Atmega register to set the duty cycle of the PWM, write 0 to 255
              
 /** end of travel detectors
    define i/O for reed switches to detect end of travel for the chain on each motor
 */
-const uint8_t  rudder_Port_EndofTravel_Pin		  = 2;
+const uint8_t  rudder_Port_EndofTravel_Pin      = 2;
 const uint8_t  rudder_Starboard_EndofTravel_Pin	= 4;
-const uint8_t  boom_Loose_EndofTravel_Pin		    = 5;
+const uint8_t  boom_Loose_EndofTravel_Pin       = 5;
 const uint8_t  boom_Tight_EndofTravel_Pin       = 6;
 
 /* define i/O for led */
