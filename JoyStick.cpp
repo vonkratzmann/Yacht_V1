@@ -214,7 +214,7 @@ void JoyStick::process_Y(int *new_Spd, int *new_Dir)    //process change for Y a
       JOYSTICK_DEBUG_PRINT(__FUNCTION__);
       JOYSTICK_DEBUG_FILE(",");
       JOYSTICK_DEBUG_FILE(__FILE__);
-      JOYSTICK_DEBUG_PRINTLN("(high) ");
+      JOYSTICK_DEBUG_PRINT("(high) ");
       JOYSTICK_DEBUG_PRINT("new_Spd: ");
       JOYSTICK_DEBUG_PRINT(*new_Spd);
       JOYSTICK_DEBUG_PRINT(" ");

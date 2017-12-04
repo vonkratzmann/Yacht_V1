@@ -72,7 +72,7 @@
       "check_Boom_Tight_Switch()"
       "check_Boom_Loose_Switch()" 
       for each of these if switch has closed and chain moving in that direction set flag to inhibit movement and stop the motor
-        if switch released only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot.
+      if switch released only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot.
  */
 
 #include "Yacht.h"
@@ -89,6 +89,10 @@ uint8_t led = LOW;                            //state of led, initially off
 boolean reedSwitchFlashFlag = false;          //flags to track if flashing led for a change of state of a reed switch
 boolean reedChangeFlag = false;
 
+//define output comparision registers for PWM, Atmega register used to set the duty cycle of the PWM, write 0 to 255 
+const uint8_t* rudder_Pwm_Reg   = 0xB3;       // this is OCR2A, for PWM output PD3 OC2A, UNO pin 11
+const uint8_t* boom_Pwm_Reg     = 0xB4;       // this is OCR2B, for PWM output PD3 OC2B, UNO pin 3
+
 /* define objects */
 
 /* define joystick */
@@ -101,8 +105,8 @@ Switch switch_Boom_Tight(boom_Tight_EndofTravel_Pin, Debounce);
 Switch switch_Boom_Loose(boom_Loose_EndofTravel_Pin, Debounce);
 
 /* define motors */
-Motor rudder_Motor(rudder_Pwm_Reg, rudder_Dir_Pin);
-Motor boom_Motor(boom_Pwm_Reg, boom_Dir_Pin);
+Motor rudder_Motor(rudder_Pwm_Reg, rudder_Dir_Pin, RUDDER_MOTOR_MAXSPEED);
+Motor boom_Motor(boom_Pwm_Reg, boom_Dir_Pin, BOOM_MOTOR_MAXSPEED);
 
 /* Interrupt Service Routine for when counter overflows in timer 2 */
 
@@ -130,7 +134,7 @@ void setup(void)
   /* Timer 0, is 8 bits used by fuction millis();
     Timer 2, is 8 bits and is used to generate an interrupt approximately every 500 microseconds and to process pwm pulses to motors
     Timer is 16x10^6 (clock speed) / [prescaler x 255];  for prescaler of 32, frequeny of interrupts and PWM is 1.960kHz
-    Use fast PWM mode, where the timer repeatedly counts from 0 to 255. The output turns on when the timer is at 0, and turns off when the timer matches the output compare register.
+    Use fast PWM mode, where the timer repeatedly counts from 0 to 255. The output turns on when the timer is at 0, and turns off when the timer matches the output compare register OCR2A and OCR2B.
     The higher the value in the output compare register, the higher the duty cycle.
 
     // ----- TIMER 2 -----
