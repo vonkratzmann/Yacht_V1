@@ -41,7 +41,7 @@
 /* define to run joystick diagnostics which which print to the serial monitor
   comment out before code is released
 */
-#define  JOYSTICK_DEBUG
+//#define  JOYSTICK_DEBUG
 
 #ifdef   JOYSTICK_DEBUG
 #define  JOYSTICK_DEBUG_PRINT(x)    Serial.print(x)
@@ -166,10 +166,10 @@ const uint8_t  boom_Pwm_Pin	    = 3;          //PWM pulse to set the speed of th
 /** end of travel detectors
    define i/O for reed switches to detect end of travel for the chain on each motor
 */
-const uint8_t  rudder_Port_EndofTravel_Pin      = 2;
-const uint8_t  rudder_Starboard_EndofTravel_Pin	= 4;
-const uint8_t  boom_Loose_EndofTravel_Pin       = 5;
-const uint8_t  boom_Tight_EndofTravel_Pin       = 6;
+const uint8_t  rudder_Port_EndofTravel_Pin      = 8;
+const uint8_t  rudder_Starboard_EndofTravel_Pin	= 9;
+const uint8_t  boom_Loose_EndofTravel_Pin       = 12;
+const uint8_t  boom_Tight_EndofTravel_Pin       = 13;
 
 /* define i/O for led */
 const uint8_t LedPin =  13; //LED connected to digital pin 13
