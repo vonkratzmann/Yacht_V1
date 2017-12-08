@@ -41,7 +41,7 @@
 /* define to run joystick diagnostics which which print to the serial monitor
   comment out before code is released
 */
-#define  JOYSTICK_DEBUG
+//#define  JOYSTICK_DEBUG
 
 #ifdef   JOYSTICK_DEBUG
 #define  JOYSTICK_DEBUG_PRINT(x)    Serial.print(x)
@@ -69,7 +69,7 @@
 /* define to run motor diagnostics which print to the serial monitor
   comment out before code is released
 */
-#define  MOTOR_DEBUG
+//#define  MOTOR_DEBUG
 
 #ifdef   MOTOR_DEBUG
 #define  MOTOR_DEBUG_PRINT(x)    Serial.print(x)
@@ -99,7 +99,7 @@
 /* define to run main loop diagnostics which print to the serial monitor
   comment out before code is released
 */
-#define  MAIN_LOOP_DEBUG
+//#define  MAIN_LOOP_DEBUG
 
 #ifdef   MAIN_LOOP_DEBUG
 #define  MAIN_LOOP_DEBUG_PRINT(x)    Serial.print(x)
@@ -156,7 +156,7 @@ const int MAXSPEED = 481;
 #ifdef   JOYSTICK_DEBUG
 const unsigned long JoyStick_Scan_Rate    = 200;   //scan every 200 ms or 1/5 of a second, (see comments above), slower for debugging
 #else
-const unsigned long JoyStick_Scan_Rate    = 50;   //scan every 50 ms or 1/20 of a second, (see comments above)
+const unsigned long JoyStick_Scan_Rate    = 50;   //scan every 50 ms or 1/20 of a second, (see comments above), normal scan rate
 #endif
 const int  JoyStick_Max_ROC              = 48;     //limit rate of change allowable by the joystick (see comments above)
 const int  noise_Mask                    = 0xFFF0; //clear bottom bits to mask any noise on signal

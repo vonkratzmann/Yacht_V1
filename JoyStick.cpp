@@ -32,8 +32,7 @@ bool JoyStick::check_X_Axis (void)               //check joystick for any change
     JOYSTICK_DEBUG_FILE(__FILE__);
     JOYSTICK_DEBUG_FILE(",");
     JOYSTICK_DEBUG_PRINT(__FUNCTION__);
-    JOYSTICK_DEBUG_PRINT(" ");
-    JOYSTICK_DEBUG_PRINT("x_Cur: ");
+    JOYSTICK_DEBUG_PRINT(" x_Cur: ");
     JOYSTICK_DEBUG_PRINT(x_Cur);
     JOYSTICK_DEBUG_PRINT(" ");
     JOYSTICK_DEBUG_PRINT("x_New: ");
@@ -82,8 +81,7 @@ bool JoyStick::check_Y_Axis (void)               //check joystick for any change
     JOYSTICK_DEBUG_FILE(__FILE__);
     JOYSTICK_DEBUG_FILE(",");
     JOYSTICK_DEBUG_PRINT(__FUNCTION__);
-    JOYSTICK_DEBUG_PRINT(" ");
-    JOYSTICK_DEBUG_PRINT("y_Cur: ");
+    JOYSTICK_DEBUG_PRINT(" y_Cur: ");
     JOYSTICK_DEBUG_PRINT(y_Cur);
     JOYSTICK_DEBUG_PRINT(" ");
     JOYSTICK_DEBUG_PRINT("y_New: ");

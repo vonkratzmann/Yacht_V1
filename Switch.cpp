@@ -45,8 +45,7 @@ bool Switch::switch_Changed(void)
     SWITCH_DEBUG_FILE(__FILE__);
     SWITCH_DEBUG_FILE(",");
     SWITCH_DEBUG_PRINT(__FUNCTION__);
-    SWITCH_DEBUG_PRINT(" ");
-    SWITCH_DEBUG_PRINT("switch_State: ");
+    SWITCH_DEBUG_PRINT(" switch_State: ");
     SWITCH_DEBUG_PRINTLN(switch_State);
 
     last_Time_Changed = millis();			  //reset timer, ready for the next change in switch postion
@@ -77,8 +76,7 @@ void  Switch::set_Inhibit_Movement_Flag(bool flag)
   SWITCH_DEBUG_FILE(__FILE__);
   SWITCH_DEBUG_FILE(",");
   SWITCH_DEBUG_PRINT(__FUNCTION__);
-  SWITCH_DEBUG_PRINT(" ");
-  SWITCH_DEBUG_PRINT("inhibit_Movement: ");
+  SWITCH_DEBUG_PRINT(" inhibit_Movement: ");
   SWITCH_DEBUG_PRINTLN(inhibit_Movement);
 }
 

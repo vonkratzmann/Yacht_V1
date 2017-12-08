@@ -190,8 +190,7 @@ void loop(void)
       {
         spd = 0;                               //yes, stop the motor
         MAIN_LOOP_DEBUG_PRINT(__FUNCTION__);
-        MAIN_LOOP_DEBUG_PRINT(" ");
-        MAIN_LOOP_DEBUG_PRINTLN(" Inhibit Movement to Starboard");
+        MAIN_LOOP_DEBUG_PRINTLN(" Inhibit moving to Starboard");
       }
 
       /* check if moving towards port and have hit limit switch for movement to port */
@@ -199,8 +198,7 @@ void loop(void)
       {
         spd = 0;                                //yes, stop the motor
         MAIN_LOOP_DEBUG_PRINT(__FUNCTION__);
-        MAIN_LOOP_DEBUG_PRINT(" ");
-        MAIN_LOOP_DEBUG_PRINTLN(" Inhibit Movement to Port");
+        MAIN_LOOP_DEBUG_PRINTLN(" Inhibit moving to Port");
       }
 
       /* update timers which track how long we have been moving forwards or reverse */
@@ -212,14 +210,12 @@ void loop(void)
       else                                      //must be moving
       {
         if (rudder_Motor.getFwdTimer() == 0 && dir == FORWARD)    //if timer was zero, then set timer to current time
-          rudder_Motor.clearFwdTimer();
+          rudder_Motor.setFwdTimer();                             //so later we can compare this time against tme in future to work out how long motor has been moving
         if (rudder_Motor.getRevTimer() == 0 && dir == REVERSE)    //if timer was zero, then set timer to current time
-          rudder_Motor.clearRevTimer();
+          rudder_Motor.setRevTimer();                           //so later we can compare this time against tme in future to work out how long motor has been moving
       }
-
       rudder_Motor.set_Requested_Speed(spd);    //set new speed
       rudder_Motor.set_Requested_Dir(dir);      //set new direction
-      //check_Moved_Off_Rudder_Switches();        //Now check if moved off reed switches
     }
     if (js.check_Y_Axis())                     //check if y axis or boom of joystick has changed
     { //yes, process the Y change
@@ -229,11 +225,19 @@ void loop(void)
 
       /* check if boom tightening and have hit the boom tight limit */
       if (spd != 0 && dir == TIGHTENING && switch_Boom_Tight.get_Inhibit_Movement_Flag())
+      {
         spd = 0;                                //yes, stop the motor
+        MAIN_LOOP_DEBUG_PRINT(__FUNCTION__);
+        MAIN_LOOP_DEBUG_PRINTLN(" Inhibit Movement boom tightening");
+      }
 
       /* check if  boom loosening and have hit the boom loose limit switch */
       if (spd != 0 && dir == LOOSENING && switch_Boom_Loose.get_Inhibit_Movement_Flag())
+      {
         spd = 0;                                  //yes, stop the motor
+        MAIN_LOOP_DEBUG_PRINT(__FUNCTION__);
+        MAIN_LOOP_DEBUG_PRINTLN(" Inhibit Movement boom loosening");
+      }
 
       /* update timers which track how long we have been moving forwards or reverse */
       if (spd == 0)                               //check if stopped
@@ -244,14 +248,12 @@ void loop(void)
       else                                        //must be moving
       {
         if (boom_Motor.getFwdTimer() == 0 && dir == FORWARD)    //if timer was zero, then set timer to current time
-          boom_Motor.clearFwdTimer();
+          boom_Motor.setFwdTimer();                             //so later we can compare this time against tme in future to work out how long motor has been moving
         if (boom_Motor.getRevTimer() == 0 && dir == REVERSE)    //if timer was zero, then set timer to current time
-          boom_Motor.clearRevTimer();
+          boom_Motor.setRevTimer();                             //so later we can compare this time against tme in future to work out how long motor has been moving
       }
-
       boom_Motor.set_Requested_Speed(spd);    //set new speed
       boom_Motor.set_Requested_Dir(dir);      //set new direction
-      //check_Moved_Off_Boom_Switches();        // Now check if moved off reed switches
     }
     /* now have speed and direction update the motors */
     rudder_Motor.update_Speed();              //update rudder motor speed from the requested speed
@@ -269,72 +271,9 @@ void loop(void)
 //end of loop()
 //-------------------------------------
 
-//
-///* check_Moved_Off_Rudder_Switches
-//   Similiar test when change in reed switch is detected, but because chain bounces,
-//   can get situation where the logic in change in reed switch does not clear the
-//   inhibit flag in the "check_xxx_xxx_Switch" function, eg
-//   chain has reached limit and inhibit flag is set, chain could be stopped and chain bounces,
-//   reed switch opens and if it remains open the inhbit flag is not cleared because the chain is not moving.
-//
-//   Only reason code is in seperate function is to make the main loop easier to read.
-//*/
-//void check_Moved_Off_Rudder_Switches(void)
-//{
-//  /* check if moving towards starboard and moved off the limit switch, then clear the inhibit movement flag for port,
-//    use the actual speed rather than required speed to ensure motor is moving. */
-//
-//  if (rudder_Motor.get_Current_Speed() != 0 && rudder_Motor.get_Current_Dir() == TOSTARBOARD &&
-//      switch_Rudder_Port.get_Inhibit_Movement_Flag() && !switch_Rudder_Port.get_Switch_State())
-//  {
-//    switch_Rudder_Port.set_Inhibit_Movement_Flag(false);
-//  }
-//
-//  /* check if moving towards port and moved off the limit switch, then clear the inhibit movement flag for starboard,
-//     use the actual speed rather than required speed to ensure motor is moving */
-//
-//  if (rudder_Motor.get_Current_Speed() != 0 && rudder_Motor.get_Current_Dir() == TOPORT &&
-//      switch_Rudder_Starboard.get_Inhibit_Movement_Flag() && !switch_Rudder_Starboard.get_Switch_State())
-//  {
-//    switch_Rudder_Starboard.set_Inhibit_Movement_Flag(false);
-//  }
-//}
-////-------------------------------------
-//
-///* check_Moved_Off_Boom_Switches()
-//   Similiar test when change in reed switch is detected, but because chain bounces,
-//   can get situation where the logic in change in reed switch does not clear the
-//   inhibit flag in the "check_xxx_xxx_Switch" function, eg
-//   chain has reached limit and inhibit flag is set, chain could be stopped and chain bounces,
-//   reed switch opens and if it remains open the inhbit flag is not cleared because the chain is not moving.
-//
-//   Only reason code is in seperate function is to make the main loop easier to read.
-//*/
-//void check_Moved_Off_Boom_Switches(void)
-//{
-//  /* check if boom tightening and moved off the loose limit switch, then clear the inhibit movement flag for the boom loose limit switch,
-//    use the actual speed rather than required speed to ensure motor is moving */
-//
-//  if (boom_Motor.get_Current_Speed() != 0 && boom_Motor.get_Current_Dir() == TIGHTENING &&
-//      switch_Boom_Loose.get_Inhibit_Movement_Flag() && !switch_Boom_Loose.get_Switch_State())
-//  {
-//    switch_Boom_Loose.set_Inhibit_Movement_Flag(false);
-//  }
-//
-//  /* check if boom loosening and moved off the tight limit switch, then clear the inhibit movement flag for the boom tight limit switch,
-//     use the actual speed rather than required speed to ensure motor is moving */
-//
-//  if (boom_Motor.get_Current_Speed() != 0 && boom_Motor.get_Current_Dir() == LOOSENING &&
-//      switch_Boom_Tight.get_Inhibit_Movement_Flag() && !switch_Boom_Tight.get_Switch_State())
-//  {
-//    switch_Boom_Tight.set_Inhibit_Movement_Flag(false);
-//  }
-//}
-//-------------------------------------
-
 /* Check Rudder starboard switch
     if switch closed and chain moving in that direction set flag to inhibit movement and stop the motor
-    if switch released only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot.
+    if switch released only clear inhibit flag if chain has been moving away from the switch for a certain time. This is to deal with overshoot.
     Only reason code is in seperate function is to make the main loop easier to read.
 */
 void check_Rudder_Starboard_Switch(void)
@@ -353,16 +292,15 @@ void check_Rudder_Starboard_Switch(void)
   else                                                          //switch now open
   {
     if (rudder_Motor.get_Requested_Dir() == TOPORT && rudder_Motor.get_Requested_Speed() != 0 &&
-        (millis() - rudder_Motor.getRevTimer()) > MOTOR_MOVING_TIME)    //check if not stopped, the rudder is moving towards port, and have been moving long enough
+        (millis() - rudder_Motor.getFwdTimer()) > MOTOR_MOVING_TIME)    //check if not stopped, the rudder is moving towards port, and have been moving long enough
       switch_Rudder_Starboard.set_Inhibit_Movement_Flag(false);       //yes, then clear the flag. Only clears flag if moving to port in case of overshoot
   }
 }
-
 //-------------------------------------
 
 /*  Check Rudder port switch
     if switch closed and chain moving in that direction set flag to inhibit movement and stop the motor
-    if switch released only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot.
+    if switch released only clear inhibit flag if chain has been moving away from the switch for a certain time. This is to deal with overshoot.
     Only reason code is in seperate function is to make the main loop easier to read.
 */
 void check_Rudder_Port_Switch(void)
@@ -381,7 +319,7 @@ void check_Rudder_Port_Switch(void)
   else                                                          //switch now open
   {
     if (rudder_Motor.get_Requested_Dir() == TOSTARBOARD && rudder_Motor.get_Requested_Speed() != 0 &&
-        (millis() - rudder_Motor.getFwdTimer()) > MOTOR_MOVING_TIME)    //check if not stopped, the rudder is moving towards starboard, and have been moving long enough
+        (millis() - rudder_Motor.getRevTimer()) > MOTOR_MOVING_TIME)    //check if not stopped, the rudder is moving towards starboard, and have been moving long enough
       switch_Rudder_Port.set_Inhibit_Movement_Flag(false);              //yes, then clear the flag. Only clears flag if moving to starboard in case of overshoot
   }
 }
@@ -389,7 +327,7 @@ void check_Rudder_Port_Switch(void)
 
 /* Check Boom loose switch
   if switch closed and chain moving in that direction set flag to inhibit movement and stop the motor
-  if switch released only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot.
+  if switch released only clear inhibit flag if chain has been moving away from the switch for a certain time. This is to deal with overshoot.
   Only reason code is in seperate function is to make the main loop easier to read.
 */
 void check_Boom_Loose_Switch(void)
@@ -416,7 +354,7 @@ void check_Boom_Loose_Switch(void)
 
 /* Check Boom Tight Switch
   if switch closed and chain moving in that direction set flag to inhibit movement and stop the motor
-  if switch released only clear inhibit flag if chain is moving away from the switch. This is to deal with overshoot.
+  if switch released only clear inhibit flag if chain has been moving away from the switch for a certain time. This is to deal with overshoot.
   Only reason code is in seperate function is to make the main loop easier to read.
 */
 void check_Boom_Tight_Switch(void)
