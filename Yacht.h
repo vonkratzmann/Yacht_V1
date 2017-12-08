@@ -133,14 +133,14 @@ const int MAXSPEED = 481;
 
 /*
    Combination of scan rate and maximum Rate of Change (ROC) limit speed of response of system
-   Restrict 0 to max change to approximately 1.5 second 
-   as scan rate is 100 millseconds, that is 15 scans in 1.5 seconds
-   therefore max change on each joystick scan is 32, ie 32 X 15 = 480 ( ie 0 to Stopped Low)
+   Restrict 0 to max change to approximately 1 second 
+   as scan rate is 50 millseconds, that is 20 scans in 1 second
+   therefore max change on each joystick scan is 48, ie 48 X 20 = 480 ( ie 0 to Stopped Low)
    from max speed in one direction to maximum speed in other direction will take 3 seconds
    NOTE if you change stopped range of joystick, these numbers need to be adjusted 
 */
-const unsigned long JoyStick_Scan_Rate    = 100;   //scan every 100 ms or 1/10 of a second, (see comments above)
-const int  JoyStick_Max_ROC              = 32;     //limit rate of change allowable by the joystick (see comments above)
+const unsigned long JoyStick_Scan_Rate    = 50;   //scan every 100 ms or 1/20 of a second, (see comments above)
+const int  JoyStick_Max_ROC              = 48;     //limit rate of change allowable by the joystick (see comments above)
 const int  noise_Mask                    = 0xFFF0; //clear bottom bits to mask any noise on signal
 
 /* ADC I/O for Joystick*/
@@ -150,7 +150,7 @@ const uint8_t boom_JoystickAnalogPin      = 0;    //y xis of joystick
 /* Set up speed range for motor, PWM range is 0 t0 255, which is stopped to full speed for the motor. If the upper motor speed is to be restricted,
    then MOTOR_MAXSPEED is set to something below 255 */
 const int MOTOR_MINSPEED = 0;
-const int RUDDER_MOTOR_MAXSPEED = 63;              
+const int RUDDER_MOTOR_MAXSPEED = 90;              
 const int BOOM_MOTOR_MAXSPEED = 127;
 
 const long Debounce = 100;                    //debounce time for switch in millisecs
