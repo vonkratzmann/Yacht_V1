@@ -133,13 +133,14 @@ const int MAXSPEED = 481;
 
 /*
    Combination of scan rate and maximum Rate of Change (ROC) limit speed of response of system
-   Restrict 0 to max change to approximately 2 seconds, ie 0 to 489 or 543 to 1023, range of 490
-   as scan rate is 100 millseconds, that is 20 scans in 2 seconds
-   therefore max change on each joystick scan is 24, ie 24 X 20 = 480 (approximately 490)
-   from max speed in one direction to maximum speed in other direction will take 4 seconds
+   Restrict 0 to max change to approximately 1.5 second 
+   as scan rate is 100 millseconds, that is 15 scans in 1.5 seconds
+   therefore max change on each joystick scan is 32, ie 32 X 15 = 480 ( ie 0 to Stopped Low)
+   from max speed in one direction to maximum speed in other direction will take 3 seconds
+   NOTE if you change stopped range of joystick, these numbers need to be adjusted 
 */
 const unsigned long JoyStick_Scan_Rate    = 100;   //scan every 100 ms or 1/10 of a second, (see comments above)
-const int  JoyStick_Max_ROC              = 24;     //limit rate of change allowable by the joystick (see comments above)
+const int  JoyStick_Max_ROC              = 32;     //limit rate of change allowable by the joystick (see comments above)
 const int  noise_Mask                    = 0xFFF0; //clear bottom bits to mask any noise on signal
 
 /* ADC I/O for Joystick*/
@@ -149,18 +150,18 @@ const uint8_t boom_JoystickAnalogPin      = 0;    //y xis of joystick
 /* Set up speed range for motor, PWM range is 0 t0 255, which is stopped to full speed for the motor. If the upper motor speed is to be restricted,
    then MOTOR_MAXSPEED is set to something below 255 */
 const int MOTOR_MINSPEED = 0;
-const int RUDDER_MOTOR_MAXSPEED = 127;              
-const int BOOM_MOTOR_MAXSPEED = 255;
+const int RUDDER_MOTOR_MAXSPEED = 63;              
+const int BOOM_MOTOR_MAXSPEED = 127;
 
 const long Debounce = 100;                    //debounce time for switch in millisecs
 
 /** motors
    define i/o for each motor driver board, each board has 2 inputs: direction & pwm
 */
-const uint8_t  rudder_Dir_Pin	  = 8;          //sets direction rudder motor turns
+const uint8_t  rudder_Dir_Pin	  = 10;          //sets direction rudder motor turns
 const uint8_t  rudder_Pwm_Pin	  = 11;         //PWM pulse to set the speed of the rudder motor, this is ATmega PB3 OC2A, UNO pin 11
 
-const uint8_t  boom_Dir_Pin     = 7;          //sets the direction the boom motor turns
+const uint8_t  boom_Dir_Pin     = 2;          //sets the direction the boom motor turns
 const uint8_t  boom_Pwm_Pin	    = 3;          //PWM pulse to set the speed of the boom motor, this is ATmega PD3 OC2B, UNO pin 3
 
 /** end of travel detectors
@@ -168,8 +169,8 @@ const uint8_t  boom_Pwm_Pin	    = 3;          //PWM pulse to set the speed of th
 */
 const uint8_t  rudder_Port_EndofTravel_Pin      = 8;
 const uint8_t  rudder_Starboard_EndofTravel_Pin	= 9;
-const uint8_t  boom_Loose_EndofTravel_Pin       = 12;
-const uint8_t  boom_Tight_EndofTravel_Pin       = 13;
+const uint8_t  boom_Loose_EndofTravel_Pin       = 6;
+const uint8_t  boom_Tight_EndofTravel_Pin       = 7;
 
 /* define i/O for led */
 const uint8_t LedPin =  13; //LED connected to digital pin 13
