@@ -25,6 +25,8 @@ class Motor
     uint8_t       motor_maxspeed;     //maximum physicl speed for the motor
     int           requestedDir;        //store requested direction
     boolean       stopped;             //flag to say if motor stopped or moving. true is stopped, false indicates moving
+    long          timeMovingForwards;  //used to track how long moving forwards
+    long          timeMovingBackwards; //used to track how long been moving backwards
 
     uint8_t*      pwm_Reg;	      //Ouput reg to load duty cycle for pwm pulse 0 to 255
     int           dir_Pin;	      //output pin to set direction to the motor
@@ -39,6 +41,10 @@ class Motor
     int   get_Current_Dir(void);
     void  update_Speed(void);
     void  update_Dir(void);
+    void  clearFwdTimer(void);
+    void  clearRevTimer(void);
+    long  getFwdTimer(void);
+    long  getRevTimer(void);
 };
 
 #endif

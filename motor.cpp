@@ -119,8 +119,10 @@ void Motor::update_Speed()
     {
       currentSpeed = requestedSpeed;      //change less than max rate of change, so accept new value
     }
+    MOTOR_DEBUG_PRINT(" updated currentSpeed: ");
+    MOTOR_DEBUG_PRINT(currentSpeed);
     /* scale speed to range of PWM. PWM range is 0 t0 255, which is stopped to full speed for the motor. If the upper motor speed is to be restricted,
-    then MOTOR_MAXSPEED is set to something below 255 */
+      then MOTOR_MAXSPEED is set to something below 255 */
     uint8_t tmpSpeed = map(currentSpeed, MINSPEED, MAXSPEED, MOTOR_MINSPEED, motor_maxspeed);
     * pwm_Reg = tmpSpeed;                 //output duty cycle
 
@@ -137,5 +139,37 @@ void    Motor::update_Dir(void)
 {
   currentDir = requestedDir;
   digitalWrite(dir_Pin, currentDir);
+}
+
+/* clearFwdTimer
+  clear timer tracking how long motor has been moving forwards
+*/
+void Motor::clearFwdTimer(void)
+{
+  timeMovingForwards = 0;
+}
+
+/* clearRevTimer
+  clear timer tracking how long motor has been moving backwards
+*/
+void Motor::clearRevTimer(void)
+{
+  timeMovingBackwards = 0;
+}
+
+/* getFwdTimer
+  get time of how long motor has been moving forwards
+*/
+long  Motor::getFwdTimer(void)
+{
+  return  timeMovingForwards;
+}
+
+/* getRevTimer
+  get time of how long motor has been moving backwards
+*/
+long  Motor::getRevTimer(void)
+{
+  return timeMovingBackwards;
 }
 

@@ -41,7 +41,7 @@
 /* define to run joystick diagnostics which which print to the serial monitor
   comment out before code is released
 */
-//#define  JOYSTICK_DEBUG
+#define  JOYSTICK_DEBUG
 
 #ifdef   JOYSTICK_DEBUG
 #define  JOYSTICK_DEBUG_PRINT(x)    Serial.print(x)
@@ -69,7 +69,7 @@
 /* define to run motor diagnostics which print to the serial monitor
   comment out before code is released
 */
-//#define  MOTOR_DEBUG
+#define  MOTOR_DEBUG
 
 #ifdef   MOTOR_DEBUG
 #define  MOTOR_DEBUG_PRINT(x)    Serial.print(x)
@@ -80,7 +80,6 @@
 #define  MOTOR_DEBUG_PRINTLN(x)
 #define  MOTOR_DEBUG_FILE(x)
 #endif
-
 
 /* define to run switch diagnostics which print to the serial monitor
   comment out before code is released
@@ -97,6 +96,20 @@
 #define  SWITCH_DEBUG_FILE(x)
 #endif
 
+/* define to run main loop diagnostics which print to the serial monitor
+  comment out before code is released
+*/
+#define  MAIN_LOOP_DEBUG
+
+#ifdef   MAIN_LOOP_DEBUG
+#define  MAIN_LOOP_DEBUG_PRINT(x)    Serial.print(x)
+#define  MAIN_LOOP_DEBUG_PRINTLN(x)  Serial.println(x)
+#define  MAIN_LOOP_DEBUG_FILE(x)
+#else
+#define  MAIN_LOOP_DEBUG_PRINT(x)
+#define  MAIN_LOOP_DEBUG_PRINTLN(x)
+#define  MAIN_LOOP_DEBUG_FILE(x)
+#endif
 
 /* set up directions for motors */
 #define FORWARD     1
@@ -139,7 +152,12 @@ const int MAXSPEED = 481;
    from max speed in one direction to maximum speed in other direction will take 3 seconds
    NOTE if you change stopped range of joystick, these numbers need to be adjusted 
 */
-const unsigned long JoyStick_Scan_Rate    = 50;   //scan every 100 ms or 1/20 of a second, (see comments above)
+
+#ifdef   JOYSTICK_DEBUG
+const unsigned long JoyStick_Scan_Rate    = 200;   //scan every 200 ms or 1/5 of a second, (see comments above), slower for debugging
+#else
+const unsigned long JoyStick_Scan_Rate    = 50;   //scan every 50 ms or 1/20 of a second, (see comments above)
+#endif
 const int  JoyStick_Max_ROC              = 48;     //limit rate of change allowable by the joystick (see comments above)
 const int  noise_Mask                    = 0xFFF0; //clear bottom bits to mask any noise on signal
 
@@ -149,9 +167,10 @@ const uint8_t boom_JoystickAnalogPin      = 0;    //y xis of joystick
 
 /* Set up speed range for motor, PWM range is 0 t0 255, which is stopped to full speed for the motor. If the upper motor speed is to be restricted,
    then MOTOR_MAXSPEED is set to something below 255 */
-const int MOTOR_MINSPEED = 0;
-const int RUDDER_MOTOR_MAXSPEED = 90;              
-const int BOOM_MOTOR_MAXSPEED = 127;
+const int   MOTOR_MINSPEED = 0;
+const int   RUDDER_MOTOR_MAXSPEED = 90;              
+const int   BOOM_MOTOR_MAXSPEED = 127;
+const long  MOTOR_MOVING_TIME = 2000;          //Time in milliseconds a motor has to be moving in one direction before can clear inhibit movement flag
 
 const long Debounce = 100;                    //debounce time for switch in millisecs
 
