@@ -36,9 +36,8 @@ void  Motor::set_Requested_Speed(int par_new_speed)
   MOTOR_DEBUG_FILE("Function: ");
   MOTOR_DEBUG_FILE(__FILE__);
   MOTOR_DEBUG_FILE(",");
-  MOTOR_DEBUG_PRINT(__FUNCTION__);
-  MOTOR_DEBUG_PRINT(" ");
-  MOTOR_DEBUG_PRINT("requestedSpeed: ");
+  MOTOR_DEBUG_PRINT(__FUNCTION__);;
+  MOTOR_DEBUG_PRINT(" requestedSpeed: ");
   MOTOR_DEBUG_PRINT(requestedSpeed);
 }
 
@@ -100,8 +99,7 @@ void Motor::update_Speed()
     MOTOR_DEBUG_FILE(__FILE__);
     MOTOR_DEBUG_FILE(",");
     MOTOR_DEBUG_PRINT(__FUNCTION__);
-    MOTOR_DEBUG_PRINT(" ");
-    MOTOR_DEBUG_PRINT("currentSpeed: ");
+    MOTOR_DEBUG_PRINT(" currentSpeed: ");
     MOTOR_DEBUG_PRINT(currentSpeed);
     MOTOR_DEBUG_PRINT(" requestedSpeed: ");
     MOTOR_DEBUG_PRINT(requestedSpeed);
@@ -173,3 +171,19 @@ long  Motor::getRevTimer(void)
   return timeMovingBackwards;
 }
 
+
+/* setFwdTimer
+  set timer to current time, so later you then can compare to see how long the motor has been moving
+*/
+void  Motor::setFwdTimer(void)
+{
+  timeMovingForwards = millis();
+}
+
+/* setRevTimer
+  set timer to current time, so later you then can compare to see how long the motor has been moving
+*/
+void  Motor::setRevTimer(void)
+{
+  timeMovingBackwards = millis();
+}

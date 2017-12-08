@@ -45,6 +45,8 @@ class Motor
     void  clearRevTimer(void);
     long  getFwdTimer(void);
     long  getRevTimer(void);
+    void  setFwdTimer(void);
+    void  setRevTimer(void);
 };
 
 #endif
