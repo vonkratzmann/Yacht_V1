@@ -170,7 +170,7 @@ const uint8_t boom_JoystickAnalogPin      = 0;    //y xis of joystick
 const int   MOTOR_MINSPEED = 0;
 const int   RUDDER_MOTOR_MAXSPEED = 90;              
 const int   BOOM_MOTOR_MAXSPEED = 127;
-const long  MOTOR_MOVING_TIME = 2000;          //Time in milliseconds a motor has to be moving in one direction before can clear inhibit movement flag
+const long  MOTOR_MOVING_TIME = 1500;          //Time in milliseconds a motor has to be moving in one direction before can clear inhibit movement flag
 
 const long Debounce = 100;                    //debounce time for switch in millisecs
 
