@@ -21,19 +21,18 @@ bool JoyStick::check_X_Axis (void)               //check joystick for any change
   bool x_Chnged = false;                        //flag joy stick position has changed
   x_New = analogRead(rudder_JoystickAnalogPin); //read joystick x position and put into x_New
 
-  JOYSTICK_DEBUG_X_EQUALS_256
+  JOYSTICK_DEBUG_X_EQUALS_256                   //if debug is defined, sets a fixed value for x for debugging
 
   x_New &= noise_Mask;                          //zero bottom bits to prevent unnecessary calls in case of noise on ADC input
   if ( x_Cur != x_New)                          //Check if changed from last read
   {
     x_Chnged = true;                            //yes, set flag to say it has changed
 
-    JOYSTICK_DEBUG_FILE("Function: ");
+    JOYSTICK_DEBUG_FILE("Function: ");          // if joystick debug defined prints out position of joystick on serial monitor
     JOYSTICK_DEBUG_FILE(__FILE__);
     JOYSTICK_DEBUG_FILE(",");
     JOYSTICK_DEBUG_PRINT(__FUNCTION__);
-    JOYSTICK_DEBUG_PRINT(" ");
-    JOYSTICK_DEBUG_PRINT("x_Cur: ");
+    JOYSTICK_DEBUG_PRINT(" x_Cur: ");
     JOYSTICK_DEBUG_PRINT(x_Cur);
     JOYSTICK_DEBUG_PRINT(" ");
     JOYSTICK_DEBUG_PRINT("x_New: ");
@@ -42,8 +41,8 @@ bool JoyStick::check_X_Axis (void)               //check joystick for any change
 
     diff = x_New - x_Cur;
     if (abs(diff) > JoyStick_Max_ROC)         //check if difference greater then max rate of change (ROC)
-    { //limit max acceleration to max rate of change
-      if (diff > 0)                           //check if reading is increasing or decreasing
+    {
+      if (diff > 0)                           //yes, limit max acceleration to max rate of change, check if reading is increasing or decreasing
         x_Cur += JoyStick_Max_ROC;            //reading has gone up,so limit acceleration by adding max rate of change
       else
         x_Cur -= JoyStick_Max_ROC;            //reading has gone down,so limit acceleration by subtracting max rate of change
@@ -71,19 +70,18 @@ bool JoyStick::check_Y_Axis (void)               //check joystick for any change
   bool y_Chnged = false;                        //flag joy stick position has changed
   y_New = analogRead(boom_JoystickAnalogPin);   //read joystick y position and put into y_new
 
-  JOYSTICK_DEBUG_Y_EQUALS_256
+  JOYSTICK_DEBUG_Y_EQUALS_256                  //if debug is defined, sets a fixed value for x for debugging
 
   y_New &= noise_Mask;                          //zero bottom bits to prevent unnecessary calls in case of noise on ADC input
   if ( y_Cur != y_New)                          //Check if changed from last read
   {
     y_Chnged = true;                             //yes, set flag to say it has changed
 
-    JOYSTICK_DEBUG_FILE("Function: ");
+    JOYSTICK_DEBUG_FILE("Function: ");          // if joystick debug defined prints out position of joystick on serial monitor
     JOYSTICK_DEBUG_FILE(__FILE__);
     JOYSTICK_DEBUG_FILE(",");
     JOYSTICK_DEBUG_PRINT(__FUNCTION__);
-    JOYSTICK_DEBUG_PRINT(" ");
-    JOYSTICK_DEBUG_PRINT("y_Cur: ");
+    JOYSTICK_DEBUG_PRINT(" y_Cur: ");
     JOYSTICK_DEBUG_PRINT(y_Cur);
     JOYSTICK_DEBUG_PRINT(" ");
     JOYSTICK_DEBUG_PRINT("y_New: ");
@@ -92,8 +90,8 @@ bool JoyStick::check_Y_Axis (void)               //check joystick for any change
 
     diff = y_New - y_Cur;
     if (abs(diff) > JoyStick_Max_ROC)       //check if difference greater then max rate of change (ROC)
-    { //limit max acceleration to max rate of change
-      if (diff > 0)                         //check if reading is increasing or decreasing
+    {
+      if (diff > 0)                         //yes, limit max acceleration to max rate of change, check if reading is increasing or decreasing
         y_Cur += JoyStick_Max_ROC;          //reading has gone up,so limit acceleration by adding max rate of change
       else
         y_Cur -= JoyStick_Max_ROC;          //reading has gone down,so limit acceleration by subtracting max rate of change
@@ -115,26 +113,30 @@ bool JoyStick::check_Y_Axis (void)               //check joystick for any change
    else checks requested direction and updates direction
    then scales the new speed bewteen the min and max speeds based on joystick position
 */
-void JoyStick::process_X(int *new_Spd, int *new_Dir)    //process change for x axis of joystick
+void JoyStick::process_X(int *new_Spd, int *new_Dir)            //process change for x axis of joystick
 {
   if (x_Cur <= Stopped_High && x_Cur >= Stopped_Low)            //check if in the stopped range
   {
     *new_Spd = 0;                                               //yes, stopped so update speed to say stopped
-    *new_Dir = TOSTARBOARD;                                     //set direction to known value, so on diagnostics does not display garbage
 
+ /* Note direction is not set when at stop position, leave unchanged to prevent unexpected change of direction just before the motor stops. 
+    This occurs because of the difference between the Motor_Max_ROC and the Joystick_Max_ROC. Probable they could be the same value. */
+ 
     JOYSTICK_DEBUG_FILE("Function: ");
     JOYSTICK_DEBUG_FILE(__FILE__);
     JOYSTICK_DEBUG_FILE(",");
     JOYSTICK_DEBUG_PRINT(__FUNCTION__);
     JOYSTICK_DEBUG_PRINT("(stopped) ");
     JOYSTICK_DEBUG_PRINT("new_Spd: ");
-    JOYSTICK_DEBUG_PRINTLN(*new_Spd);
+    JOYSTICK_DEBUG_PRINT(*new_Spd);
+    JOYSTICK_DEBUG_PRINT(" new_Dir: ");
+    JOYSTICK_DEBUG_PRINTLN(*new_Dir);
   }
   else                                                          //no, joystick requesting movement
   {
-    if (x_Cur < Stopped_Low)                                    //is joystick asking to move to starboard
+    if (x_Cur < Stopped_Low)                                    //is joystick asking to move to port
     {
-      *new_Dir = TOSTARBOARD;                                   //yes, moving to starboard
+      *new_Dir = TOPORT;                                        //yes, moving to port
       *new_Spd = map(x_Cur, Stopped_Low - 1, 0, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
       JOYSTICK_DEBUG_FILE("Function: ");
@@ -148,9 +150,9 @@ void JoyStick::process_X(int *new_Spd, int *new_Dir)    //process change for x a
       JOYSTICK_DEBUG_PRINT("new_Dir: ");
       JOYSTICK_DEBUG_PRINTLN(*new_Dir);
     }
-    else                                                        //no, request to move to port
+    else                                                        //no, request to move to starboard
     {
-      *new_Dir = TOPORT;
+      *new_Dir = TOSTARBOARD;
       *new_Spd = map(x_Cur, Stopped_High + 1, 1023, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
       JOYSTICK_DEBUG_FILE("Function: ");
@@ -172,20 +174,24 @@ void JoyStick::process_X(int *new_Spd, int *new_Dir)    //process change for x a
    else checks requested direction and updates direction
    then scales the new speed bewteen the min and max speeds based on joystick position
 */
-void JoyStick::process_Y(int *new_Spd, int *new_Dir)    //process change for Y axis of joystick
+void JoyStick::process_Y(int *new_Spd, int *new_Dir)            //process change for Y axis of joystick
 {
   if (y_Cur <= Stopped_High && y_Cur >= Stopped_Low)            //check if in the stopped range
   {
     *new_Spd = 0;                                               //yes, stopped so update speed to say stopped
-    *new_Dir = TIGHTENING;                                      //set direction to known value, so on diagnostics does not display garbage
-
+ 
+ /* Note direction is not set when at stop position, leave unchanged to prevent unexpected change of direction just before the motor stops. 
+    This occurs because of the difference between the Motor_Max_ROC and the Joystick_Max_ROC. Probable they could be the same value. */
+ 
     JOYSTICK_DEBUG_FILE("Function: ");
     JOYSTICK_DEBUG_FILE(__FILE__);
     JOYSTICK_DEBUG_FILE(",");
     JOYSTICK_DEBUG_PRINT(__FUNCTION__);
     JOYSTICK_DEBUG_PRINT("(stopped) ");
     JOYSTICK_DEBUG_PRINT("new_Spd: ");
-    JOYSTICK_DEBUG_PRINTLN(*new_Spd);
+    JOYSTICK_DEBUG_PRINT(*new_Spd);
+      JOYSTICK_DEBUG_PRINT(" new_Dir: ");
+      JOYSTICK_DEBUG_PRINTLN(*new_Dir);
   }
   else                                                          //no, joystick requesting movement
   {
@@ -214,7 +220,7 @@ void JoyStick::process_Y(int *new_Spd, int *new_Dir)    //process change for Y a
       JOYSTICK_DEBUG_PRINT(__FUNCTION__);
       JOYSTICK_DEBUG_FILE(",");
       JOYSTICK_DEBUG_FILE(__FILE__);
-      JOYSTICK_DEBUG_PRINTLN("(high) ");
+      JOYSTICK_DEBUG_PRINT("(high) ");
       JOYSTICK_DEBUG_PRINT("new_Spd: ");
       JOYSTICK_DEBUG_PRINT(*new_Spd);
       JOYSTICK_DEBUG_PRINT(" ");
