@@ -136,7 +136,7 @@ void JoyStick::process_X(int *new_Spd, int *new_Dir)            //process change
   {
     if (x_Cur < Stopped_Low)                                    //is joystick asking to move to port
     {
-      *new_Dir = TOPORT;                                        //yes, moving to port
+      *new_Dir = TOSTARBOARD;                                        //yes, moving to starboard
       *new_Spd = map(x_Cur, Stopped_Low - 1, 0, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
       JOYSTICK_DEBUG_FILE("Function: ");
@@ -150,9 +150,9 @@ void JoyStick::process_X(int *new_Spd, int *new_Dir)            //process change
       JOYSTICK_DEBUG_PRINT("new_Dir: ");
       JOYSTICK_DEBUG_PRINTLN(*new_Dir);
     }
-    else                                                        //no, request to move to starboard
+    else                                                        //no, request to move to port
     {
-      *new_Dir = TOSTARBOARD;
+      *new_Dir = TOPORT;
       *new_Spd = map(x_Cur, Stopped_High + 1, 1023, MINSPEED, MAXSPEED); //Scale joystick position to speed range for motor
 
       JOYSTICK_DEBUG_FILE("Function: ");

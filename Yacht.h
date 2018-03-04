@@ -158,7 +158,7 @@ const int     Stopped_Low  = 461;      //setjoystick low range for stopped
 //                                  1023
 //
 //   (Dir 0)Port (Reverse) <-    JoyStick     -> Starboard (dir 1)(Forward)
-//      0                                                    1023
+//      1023                                                    0
 //
 //                        (Dir 0) Tightening Boom (Reverse)
 //                                  0
