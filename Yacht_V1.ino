@@ -1,4 +1,4 @@
-/** Drives a yacht controller for Brad Connelly
+/** Drives a yacht controller 
    Author:    Kirk Kratzmann
    Version:   1.0
    Date:      01/12/2017
